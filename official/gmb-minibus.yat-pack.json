@@ -1,0 +1,453 @@
+{
+  "yat": 1,
+  "id": "gmb-minibus",
+  "version": "0.3.0",
+  "name": {
+    "en": "GMB Minibus ETA",
+    "zh-Hant": "綠色小巴班次"
+  },
+  "description": {
+    "en": "Next green minibus arrivals at one stop on one GMB route, with stop name and terminus. The numeric route ID is resolved automatically from region and route number.",
+    "zh-Hant": "顯示一條綠色專線小巴路線喺指定車站嘅到站時間、車站名同總站。路線數字ID會由地區同路線號碼自動查出,唔使自己搵。"
+  },
+  "aliases": {
+    "en": [
+      "minibus",
+      "green minibus"
+    ],
+    "zh-Hant": [
+      "小巴",
+      "綠色小巴"
+    ],
+    "jyutping": [
+      "siu2 baa1"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "region": {
+        "type": "string",
+        "title": {
+          "en": "Region",
+          "zh-Hant": "地區"
+        },
+        "enum": [
+          "HKI",
+          "KLN",
+          "NT"
+        ],
+        "enum_titles": [
+          {
+            "en": "Hong Kong Island",
+            "zh-Hant": "港島"
+          },
+          {
+            "en": "Kowloon",
+            "zh-Hant": "九龍"
+          },
+          {
+            "en": "New Territories",
+            "zh-Hant": "新界"
+          }
+        ],
+        "default": "HKI",
+        "description": {
+          "en": "Search by route number below — pick your route, direction and stop, and region, route and stop number all fill in together.",
+          "zh-Hant": "喺下面用路線號搵——揀低路線、方向同車站，地區、路線同站號會一齊填好。"
+        },
+        "x-picker": "gmb"
+      },
+      "route_code": {
+        "type": "string",
+        "title": {
+          "en": "Route number",
+          "zh-Hant": "路線號"
+        },
+        "description": {
+          "en": "The route number as printed on the minibus, e.g. 1, 69, 101M.",
+          "zh-Hant": "小巴車身印住嘅路線號，例如1、69、101M。"
+        },
+        "pattern": "^[A-Z0-9]{1,8}$",
+        "maxLength": 8,
+        "default": "1"
+      },
+      "route_seq": {
+        "type": "integer",
+        "title": {
+          "en": "Direction",
+          "zh-Hant": "方向"
+        },
+        "description": {
+          "en": "Minibus routes run one way then the other; the panel shows the terminus so you can check you picked the right one.",
+          "zh-Hant": "小巴嚟返都有兩個方向，畫面會顯示總站，方便你核對揀啱冇。"
+        },
+        "enum": [
+          1,
+          2
+        ],
+        "enum_titles": [
+          {
+            "en": "Direction 1 (as listed)",
+            "zh-Hant": "方向一"
+          },
+          {
+            "en": "Direction 2 (reverse)",
+            "zh-Hant": "方向二"
+          }
+        ],
+        "default": 1
+      },
+      "stop_seq": {
+        "type": "integer",
+        "title": {
+          "en": "Stop number",
+          "zh-Hant": "第幾個站"
+        },
+        "description": {
+          "en": "Filled in automatically once you search for your stop above.",
+          "zh-Hant": "喺上面搵到你個站之後，呢格會自動填好。"
+        },
+        "minimum": 1,
+        "maximum": 99,
+        "default": 3
+      },
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "Language",
+          "zh-Hant": "語言"
+        },
+        "enum": [
+          "en",
+          "zh",
+          "both"
+        ],
+        "enum_titles": [
+          {
+            "en": "English"
+          },
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "Bilingual",
+            "zh-Hant": "雙語"
+          }
+        ],
+        "default": "both",
+        "description": {
+          "en": "Which language(s) to show on the panel.",
+          "zh-Hant": "畫面用邊種語言顯示。"
+        }
+      }
+    },
+    "required": [
+      "region",
+      "route_code",
+      "route_seq",
+      "stop_seq",
+      "lang"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "route",
+        "type": "https",
+        "min_refresh_min": 1440,
+        "url": "https://data.etagmb.gov.hk/route/{{params.region}}/{{params.route_code}}",
+        "format": "json",
+        "max_bytes": 131072,
+        "extract": {
+          "route_id": "data[?route_code=='{{params.route_code}}'].route_id|[0]",
+          "desc_tc": "data[?route_code=='{{params.route_code}}'].description_tc|[0]",
+          "desc_en": "data[?route_code=='{{params.route_code}}'].description_en|[0]"
+        }
+      },
+      {
+        "id": "stops",
+        "type": "https",
+        "min_refresh_min": 1440,
+        "url": "https://data.etagmb.gov.hk/route-stop/{{sources.route.route_id}}/{{params.route_seq}}",
+        "format": "json",
+        "max_bytes": 65536,
+        "extract": {
+          "stop_tc": "data.route_stops[?stop_seq=='{{params.stop_seq}}'].name_tc|[0]",
+          "stop_en": "data.route_stops[?stop_seq=='{{params.stop_seq}}'].name_en|[0]",
+          "term_tc": "data.route_stops[-1].name_tc",
+          "term_en": "data.route_stops[-1].name_en"
+        }
+      },
+      {
+        "id": "eta",
+        "type": "https",
+        "url": "https://data.etagmb.gov.hk/eta/route-stop/{{sources.route.route_id}}/{{params.route_seq}}/{{params.stop_seq}}",
+        "format": "json",
+        "max_bytes": 16384,
+        "extract": {
+          "gmb_enabled": "data.enabled",
+          "gmb_etas": "data.eta|first(4)",
+          "next_diff": "data.eta[0].diff",
+          "next_rmk_tc": "data.eta[0].remarks_tc",
+          "next_rmk_en": "data.eta[0].remarks_en"
+        }
+      }
+    ]
+  },
+  "strings": {
+    "to": {
+      "en": "To",
+      "zh-Hant": "往"
+    },
+    "min": {
+      "en": "min",
+      "zh-Hant": "分鐘"
+    },
+    "min_away": {
+      "en": "minutes away",
+      "zh-Hant": "分鐘後到站"
+    },
+    "no_eta": {
+      "en": "No ETA now",
+      "zh-Hant": "暫無班次"
+    },
+    "no_dispatch": {
+      "en": "No dispatch at this stop",
+      "zh-Hant": "此站暫停派車"
+    }
+  },
+  "render": {
+    "chrome": "standard",
+    "lang_param": "lang",
+    "widgets": [
+      {
+        "type": "column",
+        "padding": [
+          8,
+          20,
+          8,
+          20
+        ],
+        "gap": 8,
+        "children": [
+          {
+            "type": "row",
+            "gap": 12,
+            "align": "center",
+            "children": [
+              {
+                "type": "icon",
+                "name": "minibus",
+                "size": "large",
+                "color": "green"
+              },
+              {
+                "type": "column",
+                "flex": 1,
+                "gap": 2,
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "{{params.route_code}}",
+                    "size": "xlarge",
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{strings.to}} {{data.term_tc}}",
+                    "size": "medium",
+                    "max_lines": 2,
+                    "when": "params.lang != 'en'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{strings.to}} {{data.term_en}}",
+                    "size": "medium",
+                    "max_lines": 2,
+                    "when": "params.lang == 'en'"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "value": "{{data.stop_tc}}",
+            "size": "medium",
+            "weight": "bold",
+            "max_lines": 2,
+            "when": "params.lang != 'en'"
+          },
+          {
+            "type": "text",
+            "value": "{{data.stop_en}}",
+            "size": "medium",
+            "weight": "bold",
+            "max_lines": 2,
+            "when": "params.lang == 'en'"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "gap": 12,
+            "align": "center",
+            "when": "data.next_diff >= '0'",
+            "children": [
+              {
+                "type": "bignum",
+                "value": "{{data.next_diff}}",
+                "size": "large",
+                "color": "green"
+              },
+              {
+                "type": "column",
+                "flex": 1,
+                "gap": 2,
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "{{strings.min_away}}",
+                    "size": "large"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{data.next_rmk_tc}}",
+                    "size": "small",
+                    "when": "params.lang != 'en'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{data.next_rmk_en}}",
+                    "size": "small",
+                    "when": "params.lang == 'en'"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": 8,
+            "align": "center",
+            "when": "data.gmb_enabled == 'false'",
+            "children": [
+              {
+                "type": "icon",
+                "name": "alert",
+                "size": "medium",
+                "color": "danger"
+              },
+              {
+                "type": "text",
+                "value": "{{strings.no_dispatch}}",
+                "size": "medium",
+                "color": "danger",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "list",
+            "bind": "data.gmb_etas",
+            "max_rows": 4,
+            "gap": 6,
+            "empty_text": "{{strings.no_eta}}",
+            "row": [
+              {
+                "type": "row",
+                "gap": 10,
+                "flex": 1,
+                "when": "index > '1'",
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "{{index}}.",
+                    "size": "medium"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.diff}} {{strings.min}}",
+                    "size": "medium",
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.timestamp|time_hhmm}}",
+                    "size": "medium",
+                    "flex": 1,
+                    "when": "item.timestamp"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.remarks_tc}}",
+                    "size": "small",
+                    "align": "right",
+                    "when": "params.lang != 'en'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.remarks_en}}",
+                    "size": "small",
+                    "align": "right",
+                    "when": "params.lang == 'en'"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "value": "{{data.desc_tc}}",
+            "size": "small",
+            "when": "params.lang != 'en'"
+          },
+          {
+            "type": "text",
+            "value": "{{data.desc_en}}",
+            "size": "small",
+            "when": "params.lang == 'en'"
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 15
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "from": "07:00",
+        "to": "09:30",
+        "every_min": 5
+      },
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "from": "17:30",
+        "to": "20:00",
+        "every_min": 5
+      }
+    ]
+  }
+}

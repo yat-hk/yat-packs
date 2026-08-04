@@ -1,0 +1,434 @@
+{
+  "yat": 1,
+  "id": "countdown",
+  "version": "2.0.0",
+  "name": {
+    "en": "Countdown",
+    "zh-Hant": "倒數"
+  },
+  "description": {
+    "en": "Days until one or two dates you choose, with a Today state, past-date handling, and a daily quote from your own pool. Rolls over at midnight.",
+    "zh-Hant": "距離你設定嘅日子仲有幾多日：有「就係今日」狀態、過期提示，仲有你自訂嘅每日一句。每晚午夜自動更新。"
+  },
+  "aliases": {
+    "en": [
+      "countdown",
+      "days left"
+    ],
+    "zh-Hant": [
+      "倒數",
+      "仲有幾多日"
+    ],
+    "jyutping": [
+      "dou3 sou3"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "label_1": {
+        "type": "string",
+        "title": {
+          "en": "Countdown label",
+          "zh-Hant": "倒數項目"
+        },
+        "description": {
+          "en": "What you're counting down to, e.g. \"DSE begins\".",
+          "zh-Hant": "你想倒數嘅嘢係咩，例如「DSE開考」。"
+        },
+        "default": "DSE begins",
+        "minLength": 1,
+        "maxLength": 40
+      },
+      "date_1": {
+        "type": "string",
+        "title": {
+          "en": "Target date",
+          "zh-Hant": "目標日期"
+        },
+        "description": {
+          "en": "The date you're counting down to.",
+          "zh-Hant": "你想倒數到嗰一日。"
+        },
+        "format": "date",
+        "default": "2027-04-07"
+      },
+      "show_second": {
+        "type": "boolean",
+        "title": {
+          "en": "Show a second countdown",
+          "zh-Hant": "顯示第二個倒數"
+        },
+        "description": {
+          "en": "Turn on to also show a second countdown below the first.",
+          "zh-Hant": "開咗就會喺第一個下面多顯示一個倒數。"
+        },
+        "default": false
+      },
+      "label_2": {
+        "type": "string",
+        "title": {
+          "en": "Second countdown label",
+          "zh-Hant": "第二個倒數項目"
+        },
+        "description": {
+          "en": "What the second countdown is for.",
+          "zh-Hant": "第二個倒數係為咗咩。"
+        },
+        "default": "Summer holiday",
+        "minLength": 1,
+        "maxLength": 40,
+        "depends_on": "show_second"
+      },
+      "date_2": {
+        "type": "string",
+        "title": {
+          "en": "Second target date",
+          "zh-Hant": "第二個目標日期"
+        },
+        "description": {
+          "en": "The second date you're counting down to.",
+          "zh-Hant": "第二個倒數嘅目標日期。"
+        },
+        "format": "date",
+        "default": "2027-07-10",
+        "depends_on": "show_second"
+      },
+      "show_quote": {
+        "type": "boolean",
+        "title": {
+          "en": "Show daily quote",
+          "zh-Hant": "顯示每日一句"
+        },
+        "description": {
+          "en": "Show one line from your own quote pool at the bottom, changing daily.",
+          "zh-Hant": "喺底部顯示你自己嘅一句說話，每日轉一句。"
+        },
+        "default": true
+      },
+      "quotes": {
+        "type": "array",
+        "title": {
+          "en": "Quote pool",
+          "zh-Hant": "金句庫"
+        },
+        "description": {
+          "en": "Your own encouragement lines. One shows per day, in order.",
+          "zh-Hant": "你自己揀嘅打氣說話，每日按次序顯示一句。"
+        },
+        "minItems": 1,
+        "maxItems": 20,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "default": [
+          "Keep going - one day at a time.",
+          "小步前進，終點在望。",
+          "Trust the routine, not the mood.",
+          "溫故而知新。",
+          "Rest is part of the plan.",
+          "盡力而為，無悔於心。",
+          "Today's effort is tomorrow's ease."
+        ]
+      }
+    },
+    "required": [
+      "label_1",
+      "date_1"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": []
+  },
+  "compute": {
+    "days_1": "{{params.date_1|date_diff_days}}",
+    "date_line_1": "{{params.date_1|date_fmt('D/M/YYYY')}} · {{params.date_1|weekday('en-short')}}",
+    "days_2": "{{params.date_2|date_diff_days}}",
+    "date_line_2": "{{params.date_2|date_fmt('D/M/YYYY')}} · {{params.date_2|weekday('en-short')}}"
+  },
+  "render": {
+    "chrome": "standard",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          12,
+          32,
+          8,
+          32
+        ],
+        "gap": 10,
+        "children": [
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "column",
+            "when": "data.days_1 > '0'",
+            "gap": 4,
+            "children": [
+              {
+                "type": "text",
+                "value": "{{params.label_1}}",
+                "size": "large",
+                "weight": "bold",
+                "max_lines": 1
+              },
+              {
+                "type": "row",
+                "gap": 20,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "bignum",
+                    "value": "{{data.days_1}}",
+                    "size": "large",
+                    "color": "red"
+                  },
+                  {
+                    "type": "column",
+                    "flex": 1,
+                    "gap": 2,
+                    "children": [
+                      {
+                        "type": "text",
+                        "value": "days to go",
+                        "size": "medium",
+                        "when": "data.days_1 > '1'"
+                      },
+                      {
+                        "type": "text",
+                        "value": "day to go",
+                        "size": "medium",
+                        "when": "data.days_1 == '1'"
+                      },
+                      {
+                        "type": "text",
+                        "value": "{{data.date_line_1}}",
+                        "size": "small"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "when": "data.days_1 == '0'",
+            "gap": 4,
+            "children": [
+              {
+                "type": "text",
+                "value": "{{params.label_1}}",
+                "size": "large",
+                "weight": "bold",
+                "max_lines": 1
+              },
+              {
+                "type": "row",
+                "gap": 16,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "icon",
+                    "name": "star",
+                    "size": "medium",
+                    "color": "red"
+                  },
+                  {
+                    "type": "text",
+                    "value": "Today!",
+                    "size": "xlarge",
+                    "weight": "bold",
+                    "color": "red"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "value": "{{data.date_line_1}}",
+                "size": "small"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "when": "data.days_1 < '0'",
+            "value": "{{params.label_1}}: this date has passed - set a new date in the pack settings.",
+            "size": "small",
+            "max_lines": 2
+          },
+          {
+            "type": "divider",
+            "thickness": 1,
+            "color": "black",
+            "when": "params.show_second"
+          },
+          {
+            "type": "column",
+            "when": {
+              "all": [
+                "params.show_second",
+                "data.days_2 > '0'"
+              ]
+            },
+            "gap": 4,
+            "children": [
+              {
+                "type": "text",
+                "value": "{{params.label_2}}",
+                "size": "large",
+                "weight": "bold",
+                "max_lines": 1
+              },
+              {
+                "type": "row",
+                "gap": 20,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "bignum",
+                    "value": "{{data.days_2}}",
+                    "size": "large",
+                    "color": "blue"
+                  },
+                  {
+                    "type": "column",
+                    "flex": 1,
+                    "gap": 2,
+                    "children": [
+                      {
+                        "type": "text",
+                        "value": "days to go",
+                        "size": "medium",
+                        "when": "data.days_2 > '1'"
+                      },
+                      {
+                        "type": "text",
+                        "value": "day to go",
+                        "size": "medium",
+                        "when": "data.days_2 == '1'"
+                      },
+                      {
+                        "type": "text",
+                        "value": "{{data.date_line_2}}",
+                        "size": "small"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "when": {
+              "all": [
+                "params.show_second",
+                "data.days_2 == '0'"
+              ]
+            },
+            "gap": 4,
+            "children": [
+              {
+                "type": "text",
+                "value": "{{params.label_2}}",
+                "size": "large",
+                "weight": "bold",
+                "max_lines": 1
+              },
+              {
+                "type": "row",
+                "gap": 16,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "icon",
+                    "name": "star",
+                    "size": "medium",
+                    "color": "blue"
+                  },
+                  {
+                    "type": "text",
+                    "value": "Today!",
+                    "size": "xlarge",
+                    "weight": "bold",
+                    "color": "blue"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "value": "{{data.date_line_2}}",
+                "size": "small"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "when": {
+              "all": [
+                "params.show_second",
+                "data.days_2 < '0'"
+              ]
+            },
+            "value": "{{params.label_2}}: this date has passed - set a new date in the pack settings.",
+            "size": "small",
+            "max_lines": 2
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "column",
+            "when": "params.show_quote",
+            "gap": 6,
+            "children": [
+              {
+                "type": "divider",
+                "thickness": 1,
+                "color": "black"
+              },
+              {
+                "type": "text",
+                "value": "{{params.quotes|pick_by_day}}",
+                "size": "small",
+                "align": "center",
+                "color": "info",
+                "max_lines": 2
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 240
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "from": "00:00",
+        "to": "01:00",
+        "every_min": 20
+      }
+    ]
+  }
+}

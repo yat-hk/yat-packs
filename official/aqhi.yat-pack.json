@@ -1,0 +1,404 @@
+{
+  "yat": 1,
+  "id": "aqhi",
+  "version": "1.2.0",
+  "name": {
+    "en": "Air Quality",
+    "zh-Hant": "空氣質素"
+  },
+  "description": {
+    "en": "AQHI for one EPD monitoring station: banded value, colour-coded meter, publish time and official health advice.",
+    "zh-Hant": "顯示所選環保署監測站嘅空氣質素健康指數：分級數值、顏色量度條、發布時間同官方健康建議。"
+  },
+  "aliases": {
+    "en": [
+      "air quality",
+      "aqhi"
+    ],
+    "zh-Hant": [
+      "空氣質素",
+      "空氣"
+    ],
+    "jyutping": [
+      "hung1 hei3 zat1 sou3"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "station": {
+        "type": "string",
+        "title": {
+          "en": "Monitoring station",
+          "zh-Hant": "監測站"
+        },
+        "description": {
+          "en": "Pick the station nearest you. Causeway Bay, Central and Mong Kok are roadside stations — usually higher readings.",
+          "zh-Hant": "揀最近你嘅監測站。銅鑼灣、中環同旺角係路邊站，讀數通常會高啲。"
+        },
+        "enum": [
+          "Central/Western",
+          "Southern",
+          "Eastern",
+          "Kwun Tong",
+          "Sham Shui Po",
+          "Kwai Chung",
+          "Tsuen Wan",
+          "Tseung Kwan O",
+          "Yuen Long",
+          "Tuen Mun",
+          "Tung Chung",
+          "Tai Po",
+          "Sha Tin",
+          "North",
+          "Tap Mun",
+          "Causeway Bay",
+          "Central",
+          "Mong Kok"
+        ],
+        "enum_titles": [
+          {
+            "en": "Central/Western",
+            "zh-Hant": "中西區"
+          },
+          {
+            "en": "Southern",
+            "zh-Hant": "南區"
+          },
+          {
+            "en": "Eastern",
+            "zh-Hant": "東區"
+          },
+          {
+            "en": "Kwun Tong",
+            "zh-Hant": "觀塘"
+          },
+          {
+            "en": "Sham Shui Po",
+            "zh-Hant": "深水埗"
+          },
+          {
+            "en": "Kwai Chung",
+            "zh-Hant": "葵涌"
+          },
+          {
+            "en": "Tsuen Wan",
+            "zh-Hant": "荃灣"
+          },
+          {
+            "en": "Tseung Kwan O",
+            "zh-Hant": "將軍澳"
+          },
+          {
+            "en": "Yuen Long",
+            "zh-Hant": "元朗"
+          },
+          {
+            "en": "Tuen Mun",
+            "zh-Hant": "屯門"
+          },
+          {
+            "en": "Tung Chung",
+            "zh-Hant": "東涌"
+          },
+          {
+            "en": "Tai Po",
+            "zh-Hant": "大埔"
+          },
+          {
+            "en": "Sha Tin",
+            "zh-Hant": "沙田"
+          },
+          {
+            "en": "North",
+            "zh-Hant": "北區"
+          },
+          {
+            "en": "Tap Mun",
+            "zh-Hant": "塔門"
+          },
+          {
+            "en": "Causeway Bay (roadside)",
+            "zh-Hant": "銅鑼灣（路邊）"
+          },
+          {
+            "en": "Central (roadside)",
+            "zh-Hant": "中環（路邊）"
+          },
+          {
+            "en": "Mong Kok (roadside)",
+            "zh-Hant": "旺角（路邊）"
+          }
+        ],
+        "default": "Central/Western"
+      },
+      "show_advice": {
+        "type": "boolean",
+        "title": {
+          "en": "Show health advice",
+          "zh-Hant": "顯示健康建議"
+        },
+        "description": {
+          "en": "Show a plain-language health tip for the current air quality level.",
+          "zh-Hant": "顯示同而家空氣質素相應嘅健康建議。"
+        },
+        "default": true
+      }
+    },
+    "required": [
+      "station"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "aqhi_now",
+        "type": "https",
+        "url": "https://dashboard.data.gov.hk/api/aqhi-individual?format=json",
+        "format": "json",
+        "max_bytes": 32768,
+        "extract": {
+          "aqhi": "[?station=='{{params.station}}'].aqhi|[0]",
+          "risk": "[?station=='{{params.station}}'].health_risk|[0]",
+          "published": "[?station=='{{params.station}}'].publish_date|[0]"
+        }
+      }
+    ]
+  },
+  "render": {
+    "chrome": "standard",
+    "widgets": [
+      {
+        "type": "column",
+        "padding": [
+          16,
+          24,
+          16,
+          24
+        ],
+        "gap": 10,
+        "children": [
+          {
+            "type": "row",
+            "gap": 20,
+            "align": "center",
+            "children": [
+              {
+                "type": "bignum",
+                "value": "{{data.aqhi}}",
+                "size": "xlarge",
+                "color": "good",
+                "when": "data.aqhi <= '3'"
+              },
+              {
+                "type": "bignum",
+                "value": "{{data.aqhi}}",
+                "size": "xlarge",
+                "color": "warn",
+                "when": {
+                  "all": [
+                    "data.aqhi >= '4'",
+                    "data.aqhi <= '6'"
+                  ]
+                }
+              },
+              {
+                "type": "bignum",
+                "value": "{{data.aqhi}}",
+                "size": "xlarge",
+                "color": "danger",
+                "when": "data.aqhi >= '7'"
+              },
+              {
+                "type": "bignum",
+                "value": "{{data.aqhi}}",
+                "size": "xlarge",
+                "color": "black",
+                "when": "data.risk == 'Serious'"
+              },
+              {
+                "type": "bignum",
+                "value": "—",
+                "size": "xlarge",
+                "when": "data.aqhi missing"
+              },
+              {
+                "type": "column",
+                "flex": 1,
+                "gap": 4,
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "{{params.station}}",
+                    "size": "large",
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{data.risk|upper}} RISK",
+                    "size": "medium",
+                    "weight": "bold",
+                    "color": "good",
+                    "when": "data.aqhi <= '3'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{data.risk|upper}} RISK",
+                    "size": "medium",
+                    "weight": "bold",
+                    "color": "warn",
+                    "when": {
+                      "all": [
+                        "data.aqhi >= '4'",
+                        "data.aqhi <= '6'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{data.risk|upper}} RISK",
+                    "size": "medium",
+                    "weight": "bold",
+                    "color": "danger",
+                    "when": "data.aqhi >= '7'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{data.risk|upper}} RISK",
+                    "size": "medium",
+                    "weight": "bold",
+                    "color": "black",
+                    "when": "data.risk == 'Serious'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "UNAVAILABLE 暫無數據",
+                    "size": "medium",
+                    "weight": "bold",
+                    "when": "data.risk missing"
+                  }
+                ]
+              },
+              {
+                "type": "icon",
+                "name": "alert",
+                "size": "large",
+                "color": "danger",
+                "when": {
+                  "any": [
+                    "data.aqhi >= '7'",
+                    "data.risk == 'Serious'"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "type": "bar",
+            "value": "{{data.aqhi}}",
+            "min": 0,
+            "max": 11,
+            "height": 20,
+            "color": "good",
+            "when": "data.aqhi <= '3'"
+          },
+          {
+            "type": "bar",
+            "value": "{{data.aqhi}}",
+            "min": 0,
+            "max": 11,
+            "height": 20,
+            "color": "warn",
+            "when": {
+              "all": [
+                "data.aqhi >= '4'",
+                "data.aqhi <= '6'"
+              ]
+            }
+          },
+          {
+            "type": "bar",
+            "value": "{{data.aqhi}}",
+            "min": 0,
+            "max": 11,
+            "height": 20,
+            "color": "danger",
+            "when": "data.aqhi >= '7'"
+          },
+          {
+            "type": "bar",
+            "value": "11",
+            "min": 0,
+            "max": 11,
+            "height": 20,
+            "color": "black",
+            "when": "data.risk == 'Serious'"
+          },
+          {
+            "type": "text",
+            "value": "1–3 Low 低 · 4–6 Moderate 中 · 7 High 高 · 8–10 Very High 甚高 · 10+ Serious 嚴重",
+            "size": "small"
+          },
+          {
+            "type": "text",
+            "value": "EPD 環保署 · published 發布 {{data.published|time_hhmm}}",
+            "size": "small",
+            "align": "right",
+            "when": "data.published exists"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "column",
+            "when": "params.show_advice",
+            "gap": 4,
+            "children": [
+              {
+                "type": "text",
+                "value": "Air quality is good — enjoy normal outdoor activities. 空氣質素良好，可如常進行戶外活動。",
+                "size": "small",
+                "max_lines": 2,
+                "when": "data.risk == 'Low'"
+              },
+              {
+                "type": "text",
+                "value": "Normal activities for most people. 一般市民可如常活動。",
+                "size": "small",
+                "max_lines": 2,
+                "when": "data.risk == 'Moderate'"
+              },
+              {
+                "type": "text",
+                "value": "People with heart or respiratory illness should reduce prolonged outdoor exertion. 心臟病或呼吸系統疾病患者應減少戶外體力消耗。",
+                "size": "small",
+                "max_lines": 2,
+                "when": "data.risk == 'High'"
+              },
+              {
+                "type": "text",
+                "value": "The general public should reduce outdoor physical exertion. 市民應減少戶外體力消耗。",
+                "size": "small",
+                "max_lines": 2,
+                "when": "data.risk == 'Very High'"
+              },
+              {
+                "type": "text",
+                "value": "Avoid outdoor physical exertion and stay indoors. 市民應避免戶外體力消耗，盡量留在室內。",
+                "size": "small",
+                "max_lines": 2,
+                "when": "data.risk == 'Serious'"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 60
+    }
+  }
+}

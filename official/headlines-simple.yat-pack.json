@@ -1,0 +1,209 @@
+{
+  "yat": 1,
+  "id": "headlines-simple",
+  "version": "3.0.1",
+  "name": {
+    "en": "RTHK Headlines",
+    "zh-Hant": "港台頭條"
+  },
+  "description": {
+    "en": "Latest headlines from one RTHK express news feed of your choice, numbered, with per-item publish times. You choose how many headlines to show.",
+    "zh-Hant": "自選一條香港電台即時新聞頻道，顯示最新頭條、序號及每則發稿時間，條數自訂。"
+  },
+  "aliases": {
+    "en": [
+      "headlines",
+      "rthk news"
+    ],
+    "zh-Hant": [
+      "頭條",
+      "港台新聞"
+    ],
+    "jyutping": [
+      "tau4 tiu4",
+      "gong2 toi4 san1 man4"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "feed": {
+        "type": "string",
+        "title": {
+          "en": "News feed",
+          "zh-Hant": "新聞頻道"
+        },
+        "description": {
+          "en": "Which RTHK news feed to show.",
+          "zh-Hant": "想睇香港電台邊條新聞頻道。"
+        },
+        "enum": [
+          "c_expressnews_clocal",
+          "c_expressnews_greaterchina",
+          "c_expressnews_cinternational",
+          "c_expressnews_cfinance",
+          "c_expressnews_csport",
+          "e_expressnews_elocal",
+          "e_expressnews_egreaterchina",
+          "e_expressnews_einternational",
+          "e_expressnews_efinance",
+          "e_expressnews_esport"
+        ],
+        "enum_titles": [
+          {
+            "en": "Local (Chinese)",
+            "zh-Hant": "本地（中文）"
+          },
+          {
+            "en": "Greater China (Chinese)",
+            "zh-Hant": "大中華（中文）"
+          },
+          {
+            "en": "World (Chinese)",
+            "zh-Hant": "國際（中文）"
+          },
+          {
+            "en": "Finance (Chinese)",
+            "zh-Hant": "財經（中文）"
+          },
+          {
+            "en": "Sport (Chinese)",
+            "zh-Hant": "體育（中文）"
+          },
+          {
+            "en": "Local (English)",
+            "zh-Hant": "本地（英文）"
+          },
+          {
+            "en": "Greater China (English)",
+            "zh-Hant": "大中華（英文）"
+          },
+          {
+            "en": "World (English)",
+            "zh-Hant": "國際（英文）"
+          },
+          {
+            "en": "Finance (English)",
+            "zh-Hant": "財經（英文）"
+          },
+          {
+            "en": "Sport (English)",
+            "zh-Hant": "體育（英文）"
+          }
+        ],
+        "default": "c_expressnews_clocal"
+      },
+      "top_n": {
+        "type": "integer",
+        "title": {
+          "en": "Headlines shown",
+          "zh-Hant": "顯示幾多條"
+        },
+        "description": {
+          "en": "How many headlines to show.",
+          "zh-Hant": "想顯示幾多條頭條。"
+        },
+        "minimum": 3,
+        "maximum": 10,
+        "default": 8
+      }
+    },
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "rthk",
+        "type": "https",
+        "url": "https://rthk9.rthk.hk/rthk/news/rss/{{params.feed}}.xml",
+        "format": "rss",
+        "extract": {
+          "headlines": "items|first({{params.top_n}})",
+          "latest": "items[0].pub_date"
+        }
+      }
+    ]
+  },
+  "render": {
+    "chrome": "standard",
+    "widgets": [
+      {
+        "type": "column",
+        "padding": [
+          8,
+          24,
+          8,
+          24
+        ],
+        "gap": 6,
+        "children": [
+          {
+            "type": "list",
+            "bind": "data.headlines",
+            "max_rows": {
+              "param": "top_n"
+            },
+            "gap": 4,
+            "empty_text": "暫無新聞 No news items",
+            "row": [
+              {
+                "type": "row",
+                "gap": 10,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "{{index}}.",
+                    "size": "small",
+                    "color": "info"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.title}}",
+                    "size": "medium",
+                    "max_lines": 1,
+                    "flex": 1
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.pub_date|time_hhmm}}",
+                    "size": "small"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "text",
+            "value": "更新 Updated {{data.latest|time_hhmm}}",
+            "size": "small",
+            "align": "right",
+            "when": "data.latest exists"
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 30
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "from": "07:00",
+        "to": "09:30",
+        "every_min": 15
+      }
+    ]
+  }
+}

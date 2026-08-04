@@ -1,0 +1,515 @@
+{
+  "yat": 1,
+  "id": "family-board",
+  "version": "2.1.1",
+  "name": {
+    "en": "Family Board",
+    "zh-Hant": "家庭告示板"
+  },
+  "description": {
+    "en": "A static family notice board: your notices with pinning, today's date, an optional QR code to the shared album, and a daily quote from your own pool.",
+    "zh-Hant": "家庭告示板：家事提醒（可置頂）、今日日期、可選嘅共享相簿 QR code，同你自訂嘅每日一句。"
+  },
+  "aliases": {
+    "en": [
+      "family board",
+      "notice board"
+    ],
+    "zh-Hant": [
+      "告示板",
+      "家庭告示板"
+    ],
+    "jyutping": [
+      "gou3 si6 baan2"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "board_title": {
+        "type": "string",
+        "title": {
+          "en": "Board title",
+          "zh-Hant": "告示板標題"
+        },
+        "description": {
+          "en": "Heading shown at the top of the board.",
+          "zh-Hant": "顯示喺告示板最上面嘅標題。"
+        },
+        "default": "Family Notices",
+        "minLength": 1,
+        "maxLength": 24
+      },
+      "notices": {
+        "type": "array",
+        "title": {
+          "en": "Notices",
+          "zh-Hant": "告示"
+        },
+        "description": {
+          "en": "Up to 8 lines for the board. Pinned notices get a red star.",
+          "zh-Hant": "最多8行告示。有置頂嘅會加個紅星。"
+        },
+        "maxItems": 8,
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": {
+                "en": "Notice",
+                "zh-Hant": "告示內容"
+              },
+              "minLength": 1,
+              "maxLength": 96,
+              "description": {
+                "en": "What the notice says.",
+                "zh-Hant": "告示嘅內容。"
+              }
+            },
+            "pinned": {
+              "type": "boolean",
+              "title": {
+                "en": "Pinned",
+                "zh-Hant": "置頂"
+              },
+              "default": false,
+              "description": {
+                "en": "Turn on to mark this notice as important.",
+                "zh-Hant": "開咗代表呢個告示重要，會置頂顯示。"
+              }
+            }
+          },
+          "required": [
+            "text",
+            "pinned"
+          ],
+          "additionalProperties": false
+        },
+        "default": [
+          {
+            "text": "Piano lesson Saturday 10:00",
+            "pinned": false
+          },
+          {
+            "text": "Grandma's birthday dinner - Sunday 19:00",
+            "pinned": true
+          },
+          {
+            "text": "Recycling pickup: Wednesday morning",
+            "pinned": false
+          }
+        ]
+      },
+      "show_album": {
+        "type": "boolean",
+        "title": {
+          "en": "Show album QR code",
+          "zh-Hant": "顯示相簿QR code"
+        },
+        "description": {
+          "en": "Show a QR code linking to your shared photo album.",
+          "zh-Hant": "顯示一個QR code，掃咗就去到你嘅共享相簿。"
+        },
+        "default": true
+      },
+      "album_url": {
+        "type": "string",
+        "title": {
+          "en": "Shared album URL",
+          "zh-Hant": "共享相簿網址"
+        },
+        "description": {
+          "en": "The link to your shared photo album — paste it here and it shows as a QR code people can scan.",
+          "zh-Hant": "你嘅共享相簿連結——貼喺呢度，會變成QR code俾人掃。"
+        },
+        "default": "https://photos.app.goo.gl/REPLACE-WITH-YOUR-ALBUM",
+        "minLength": 12,
+        "maxLength": 500,
+        "pattern": "^https://",
+        "depends_on": "show_album"
+      },
+      "album_label": {
+        "type": "string",
+        "title": {
+          "en": "QR caption",
+          "zh-Hant": "QR code說明"
+        },
+        "description": {
+          "en": "A short caption shown under the QR code.",
+          "zh-Hant": "QR code下面顯示嘅短說明。"
+        },
+        "default": "Scan for photos",
+        "minLength": 1,
+        "maxLength": 40,
+        "depends_on": "show_album"
+      },
+      "show_quote": {
+        "type": "boolean",
+        "title": {
+          "en": "Show daily quote",
+          "zh-Hant": "顯示每日一句"
+        },
+        "description": {
+          "en": "Show one line from your own quote pool at the bottom, changing daily.",
+          "zh-Hant": "喺底部顯示你自己嘅一句說話，每日轉一句。"
+        },
+        "default": true
+      },
+      "quotes": {
+        "type": "array",
+        "title": {
+          "en": "Quote pool",
+          "zh-Hant": "金句庫"
+        },
+        "description": {
+          "en": "Your own lines, in any language. One shows per day, in order.",
+          "zh-Hant": "你自己揀嘅說話，乜嘢語言都得，每日按次序顯示一句。"
+        },
+        "minItems": 1,
+        "maxItems": 20,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "default": [
+          "Eat together at least once a day.",
+          "家和萬事興。",
+          "Small habits, big years.",
+          "施比受更有福。",
+          "Leave things better than you found them.",
+          "知足常樂。",
+          "Say the nice thing out loud."
+        ]
+      },
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "Board language",
+          "zh-Hant": "告示板語言"
+        },
+        "description": {
+          "en": "Language for the date line and board labels.",
+          "zh-Hant": "日期同標籤用嘅語言。"
+        },
+        "enum": [
+          "en",
+          "zh",
+          "both"
+        ],
+        "enum_titles": [
+          {
+            "en": "English"
+          },
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "Bilingual",
+            "zh-Hant": "雙語"
+          }
+        ],
+        "default": "both"
+      }
+    },
+    "required": [
+      "board_title"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "rota",
+        "type": "inline",
+        "data": {
+          "rows": [
+            [
+              "週一 Mon",
+              "廚餘 Food waste"
+            ],
+            [
+              "週二 Tue",
+              "—"
+            ],
+            [
+              "週三 Wed",
+              "回收 Recycling"
+            ],
+            [
+              "週四 Thu",
+              "—"
+            ],
+            [
+              "週五 Fri",
+              "廢紙 Paper"
+            ],
+            [
+              "週六 Sat",
+              "玻璃 Glass"
+            ],
+            [
+              "週日 Sun",
+              "—"
+            ],
+            [
+              "週一 Mon",
+              "廚餘 Food waste"
+            ],
+            [
+              "週二 Tue",
+              "—"
+            ],
+            [
+              "週三 Wed",
+              "回收 Recycling"
+            ],
+            [
+              "週四 Thu",
+              "—"
+            ],
+            [
+              "週五 Fri",
+              "廢紙 Paper"
+            ],
+            [
+              "週六 Sat",
+              "玻璃 Glass"
+            ],
+            [
+              "週日 Sun",
+              "—"
+            ]
+          ]
+        },
+        "extract": {
+          "rota_week": "rows|last(7)"
+        }
+      }
+    ]
+  },
+  "strings": {
+    "no_notices": {
+      "en": "No notices - add one in the pack settings.",
+      "zh-Hant": "未有告示，請喺設定度加返啲。"
+    },
+    "rota_hdr": {
+      "en": "Collection this week",
+      "zh-Hant": "本週回收"
+    }
+  },
+  "render": {
+    "chrome": "standard",
+    "lang_param": "lang",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          12,
+          24,
+          8,
+          24
+        ],
+        "gap": 8,
+        "children": [
+          {
+            "type": "row",
+            "gap": 8,
+            "align": "center",
+            "children": [
+              {
+                "type": "text",
+                "value": "{{params.board_title}}",
+                "size": "large",
+                "weight": "bold",
+                "max_lines": 1
+              },
+              {
+                "type": "spacer",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "{{now|date_fmt('M月D日')}} {{now|weekday('zh-Hant')}}",
+                "size": "small",
+                "when": "params.lang != 'en'"
+              },
+              {
+                "type": "text",
+                "value": "{{now|date_fmt('D/M')}} {{now|weekday('en-short')}}",
+                "size": "small",
+                "when": "params.lang != 'zh'"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": 24,
+            "align": "start",
+            "children": [
+              {
+                "type": "column",
+                "flex": 1,
+                "gap": 4,
+                "children": [
+                  {
+                    "type": "list",
+                    "bind": "params.notices",
+                    "max_rows": 8,
+                    "gap": 4,
+                    "empty_text": "{{strings.no_notices}}",
+                    "row": [
+                      {
+                        "type": "row",
+                        "gap": 10,
+                        "align": "start",
+                        "children": [
+                          {
+                            "type": "icon",
+                            "name": "star",
+                            "size": "small",
+                            "color": "accent",
+                            "when": "item.pinned == 'true'"
+                          },
+                          {
+                            "type": "icon",
+                            "name": "arrow_right",
+                            "size": "small",
+                            "color": "black",
+                            "when": "item.pinned != 'true'"
+                          },
+                          {
+                            "type": "text",
+                            "value": "{{item.text}}",
+                            "size": "medium",
+                            "weight": "bold",
+                            "max_lines": 1,
+                            "flex": 1,
+                            "when": "item.pinned == 'true'"
+                          },
+                          {
+                            "type": "text",
+                            "value": "{{item.text}}",
+                            "size": "medium",
+                            "max_lines": 1,
+                            "flex": 1,
+                            "when": "item.pinned != 'true'"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "divider",
+                    "thickness": 1
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{strings.rota_hdr}}",
+                    "size": "small",
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "list",
+                    "bind": "data.rota_week",
+                    "max_rows": 7,
+                    "gap": 2,
+                    "row": [
+                      {
+                        "type": "row",
+                        "gap": 10,
+                        "children": [
+                          {
+                            "type": "text",
+                            "value": "{{item[0]}}",
+                            "size": "small",
+                            "weight": "bold"
+                          },
+                          {
+                            "type": "text",
+                            "value": "{{item[1]}}",
+                            "size": "small",
+                            "flex": 1
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "gap": 6,
+                "align": "center",
+                "when": "params.show_album",
+                "children": [
+                  {
+                    "type": "qr",
+                    "value": "{{params.album_url}}",
+                    "size": 150,
+                    "ecc": "M"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{params.album_label}}",
+                    "size": "small",
+                    "align": "center",
+                    "max_lines": 2
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "column",
+            "when": "params.show_quote",
+            "gap": 6,
+            "children": [
+              {
+                "type": "divider",
+                "thickness": 1,
+                "color": "black"
+              },
+              {
+                "type": "text",
+                "value": "{{params.quotes|pick_by_day}}",
+                "size": "medium",
+                "align": "center",
+                "color": "info",
+                "max_lines": 2
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 360
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "from": "00:00",
+        "to": "00:45",
+        "every_min": 15
+      }
+    ]
+  }
+}

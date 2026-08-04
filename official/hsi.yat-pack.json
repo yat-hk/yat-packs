@@ -1,0 +1,229 @@
+{
+  "yat": 1,
+  "id": "hsi",
+  "version": "1.0.0",
+  "name": {
+    "en": "Hang Seng Index",
+    "zh-Hant": "恒生指數"
+  },
+  "description": {
+    "en": "Hang Seng Index level at a glance, colour-coded against the previous close, from Yahoo Finance.",
+    "zh-Hant": "一眼睇恒生指數現水平，同比較上日收市價，顏色會反映升跌。數據嚟自 Yahoo Finance。"
+  },
+  "aliases": {
+    "en": [
+      "hang seng index",
+      "hang seng",
+      "hsi",
+      "stock market"
+    ],
+    "zh-Hant": [
+      "恒生指數",
+      "恒指",
+      "股市"
+    ],
+    "jyutping": [
+      "hang4 sang1 zi2 sou3",
+      "hang4 zi2"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "Language",
+          "zh-Hant": "語言"
+        },
+        "description": {
+          "en": "Which language(s) to show on the panel.",
+          "zh-Hant": "畫面用邊種語言顯示。"
+        },
+        "enum": [
+          "en",
+          "zh",
+          "both"
+        ],
+        "enum_titles": [
+          {
+            "en": "English"
+          },
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "Bilingual",
+            "zh-Hant": "雙語"
+          }
+        ],
+        "default": "both"
+      }
+    },
+    "required": [
+      "lang"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "quote",
+        "type": "https",
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EHSI?interval=1d&range=1d",
+        "headers": {
+          "Accept": "application/json",
+          "User-Agent": "Mozilla/5.0 (compatible; YAT-device/1.0)"
+        },
+        "format": "json",
+        "max_bytes": 16384,
+        "extract": {
+          "level": "chart.result[0].meta.regularMarketPrice|round(0)",
+          "prev_close": "chart.result[0].meta.chartPreviousClose|round(0)",
+          "day_low": "chart.result[0].meta.regularMarketDayLow|round(0)",
+          "day_high": "chart.result[0].meta.regularMarketDayHigh|round(0)",
+          "updated": "chart.result[0].meta.regularMarketTime"
+        }
+      }
+    ]
+  },
+  "strings": {
+    "prev_close_label": {
+      "en": "Prev close",
+      "zh-Hant": "昨收"
+    },
+    "day_range_label": {
+      "en": "Today's range",
+      "zh-Hant": "今日波幅"
+    },
+    "updated_label": {
+      "en": "Updated",
+      "zh-Hant": "更新"
+    }
+  },
+  "render": {
+    "chrome": "standard",
+    "lang_param": "lang",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          20,
+          32,
+          14,
+          32
+        ],
+        "gap": 14,
+        "children": [
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "row",
+            "gap": 24,
+            "align": "center",
+            "children": [
+              {
+                "type": "bignum",
+                "value": "{{data.level}}",
+                "size": "large",
+                "color": "red",
+                "when": "data.level > '{{data.prev_close}}'"
+              },
+              {
+                "type": "bignum",
+                "value": "{{data.level}}",
+                "size": "large",
+                "color": "green",
+                "when": "data.level < '{{data.prev_close}}'"
+              },
+              {
+                "type": "bignum",
+                "value": "{{data.level}}",
+                "size": "large",
+                "color": "black",
+                "when": "data.level == '{{data.prev_close}}'"
+              },
+              {
+                "type": "column",
+                "flex": 1,
+                "gap": 14,
+                "children": [
+                  {
+                    "type": "row",
+                    "gap": 8,
+                    "align": "center",
+                    "children": [
+                      {
+                        "type": "icon",
+                        "name": "arrow_up",
+                        "size": "medium",
+                        "color": "red",
+                        "when": "data.level > '{{data.prev_close}}'"
+                      },
+                      {
+                        "type": "icon",
+                        "name": "arrow_down",
+                        "size": "medium",
+                        "color": "green",
+                        "when": "data.level < '{{data.prev_close}}'"
+                      },
+                      {
+                        "type": "text",
+                        "value": "{{strings.prev_close_label}} {{data.prev_close}}",
+                        "size": "medium",
+                        "weight": "bold",
+                        "max_lines": 2
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{strings.day_range_label}} {{data.day_low}}–{{data.day_high}}",
+                    "size": "medium",
+                    "max_lines": 2
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "text",
+            "value": "HKEX · Yahoo Finance · {{strings.updated_label}} {{data.updated|time_hhmm}}",
+            "size": "small",
+            "align": "right"
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 240
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "from": "09:30",
+        "to": "16:00",
+        "every_min": 15
+      }
+    ]
+  }
+}

@@ -1,0 +1,273 @@
+{
+  "yat": 1,
+  "id": "fx-hkd",
+  "version": "2.0.0",
+  "name": {
+    "en": "Exchange Rates",
+    "zh-Hant": "匯率"
+  },
+  "description": {
+    "en": "Morning exchange-rate board: pick one currency and see what a single unit of it is worth in Hong Kong dollars, updated daily.",
+    "zh-Hant": "每朝匯率一覽：揀一種貨幣，睇住一個單位換到幾多港元，每日更新。"
+  },
+  "aliases": {
+    "en": [
+      "exchange rates",
+      "exchange rate",
+      "fx",
+      "currency"
+    ],
+    "zh-Hant": [
+      "匯率",
+      "外匯",
+      "美金"
+    ],
+    "jyutping": [
+      "wui6 leot2"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "currency": {
+        "type": "string",
+        "title": {
+          "en": "Currency",
+          "zh-Hant": "貨幣"
+        },
+        "enum": [
+          "JPY",
+          "USD",
+          "TWD",
+          "KRW",
+          "THB",
+          "CNY",
+          "GBP",
+          "EUR",
+          "AUD",
+          "CAD",
+          "SGD",
+          "MOP",
+          "PHP",
+          "MYR",
+          "CHF",
+          "NZD"
+        ],
+        "enum_titles": [
+          {
+            "en": "Japanese Yen",
+            "zh-Hant": "日圓"
+          },
+          {
+            "en": "US Dollar",
+            "zh-Hant": "美元"
+          },
+          {
+            "en": "New Taiwan Dollar",
+            "zh-Hant": "新台幣"
+          },
+          {
+            "en": "Korean Won",
+            "zh-Hant": "韓元"
+          },
+          {
+            "en": "Thai Baht",
+            "zh-Hant": "泰銖"
+          },
+          {
+            "en": "Chinese Yuan",
+            "zh-Hant": "人民幣"
+          },
+          {
+            "en": "British Pound",
+            "zh-Hant": "英鎊"
+          },
+          {
+            "en": "Euro",
+            "zh-Hant": "歐元"
+          },
+          {
+            "en": "Australian Dollar",
+            "zh-Hant": "澳元"
+          },
+          {
+            "en": "Canadian Dollar",
+            "zh-Hant": "加元"
+          },
+          {
+            "en": "Singapore Dollar",
+            "zh-Hant": "新加坡元"
+          },
+          {
+            "en": "Macau Pataca",
+            "zh-Hant": "澳門元"
+          },
+          {
+            "en": "Philippine Peso",
+            "zh-Hant": "菲律賓披索"
+          },
+          {
+            "en": "Malaysian Ringgit",
+            "zh-Hant": "馬來西亞令吉"
+          },
+          {
+            "en": "Swiss Franc",
+            "zh-Hant": "瑞士法郎"
+          },
+          {
+            "en": "New Zealand Dollar",
+            "zh-Hant": "紐西蘭元"
+          }
+        ],
+        "default": "JPY",
+        "description": {
+          "en": "Which currency to price in Hong Kong dollars.",
+          "zh-Hant": "想睇邊種貨幣兌港元。"
+        }
+      },
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "Language",
+          "zh-Hant": "語言"
+        },
+        "enum": [
+          "en",
+          "zh",
+          "both"
+        ],
+        "enum_titles": [
+          {
+            "en": "English"
+          },
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "Bilingual",
+            "zh-Hant": "雙語"
+          }
+        ],
+        "default": "both",
+        "description": {
+          "en": "Which language(s) to show on the panel.",
+          "zh-Hant": "畫面用邊種語言顯示。"
+        }
+      }
+    },
+    "required": [
+      "currency",
+      "lang"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "rate",
+        "type": "https",
+        "url": "https://open.er-api.com/v6/latest/{{params.currency}}",
+        "format": "json",
+        "max_bytes": 16384,
+        "extract": {
+          "rate_hkd": "rates.HKD|round(5)",
+          "updated": "time_last_update_unix"
+        }
+      }
+    ]
+  },
+  "render": {
+    "chrome": "standard",
+    "lang_param": "lang",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          16,
+          32,
+          10,
+          32
+        ],
+        "gap": 8,
+        "children": [
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "text",
+            "value": "{{params.currency|enum_title('currency')}}",
+            "size": "large",
+            "weight": "bold",
+            "color": "info",
+            "align": "center"
+          },
+          {
+            "type": "bignum",
+            "value": "{{data.rate_hkd|round(5)}}",
+            "size": "large",
+            "align": "center"
+          },
+          {
+            "type": "text",
+            "value": "1 {{params.currency}} 兌港元",
+            "size": "medium",
+            "align": "center",
+            "when": "params.lang != 'en'"
+          },
+          {
+            "type": "text",
+            "value": "HKD per 1 {{params.currency}}",
+            "size": "medium",
+            "align": "center",
+            "when": "params.lang != 'zh'"
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "text",
+            "value": "匯率更新 {{data.updated|date_fmt('D/M')}} {{data.updated|time_hhmm}}",
+            "size": "small",
+            "align": "right",
+            "when": "params.lang != 'en'"
+          },
+          {
+            "type": "text",
+            "value": "Rates updated {{data.updated|date_fmt('D/M')}} {{data.updated|time_hhmm}}",
+            "size": "small",
+            "align": "right",
+            "when": "params.lang == 'en'"
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 360
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "from": "07:00",
+        "to": "09:30",
+        "every_min": 30
+      }
+    ]
+  }
+}

@@ -1,0 +1,276 @@
+{
+  "yat": 1,
+  "id": "stock-ticker",
+  "version": "2.2.0",
+  "name": {
+    "en": "Stocks",
+    "zh-Hant": "股票"
+  },
+  "description": {
+    "en": "Watchlist quotes from Finnhub: last price, day change and percent change, coloured up/down in your preferred convention.",
+    "zh-Hant": "透過 Finnhub 顯示自選股票嘅最新價、升跌同百分比變幅，升跌顏色可揀綠升或紅升。"
+  },
+  "aliases": {
+    "en": [
+      "stocks",
+      "stock ticker",
+      "quotes"
+    ],
+    "zh-Hant": [
+      "股票",
+      "股價"
+    ],
+    "jyutping": [
+      "gu2 piu3"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "symbols": {
+        "type": "array",
+        "title": {
+          "en": "Symbols",
+          "zh-Hant": "股票代號"
+        },
+        "description": {
+          "en": "Stock or crypto symbols to show, one per row, e.g. AAPL, MSFT. Capital letters only.",
+          "zh-Hant": "想顯示嘅股票或者虛擬貨幣代號，一行一個，例如AAPL、MSFT。要用大階英文字母。"
+        },
+        "maxItems": 6,
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[A-Z0-9.:_-]+$"
+        },
+        "default": [
+          "AAPL",
+          "MSFT",
+          "NVDA",
+          "TSLA"
+        ]
+      },
+      "up_color": {
+        "type": "string",
+        "title": {
+          "en": "Gain colour",
+          "zh-Hant": "升嘅顏色"
+        },
+        "description": {
+          "en": "Choose green-up (Western style) or red-up (HK/China style).",
+          "zh-Hant": "揀「綠升紅跌」定「紅升綠跌」。"
+        },
+        "enum": [
+          "green",
+          "red"
+        ],
+        "enum_titles": [
+          {
+            "en": "Green up, red down",
+            "zh-Hant": "綠升紅跌"
+          },
+          {
+            "en": "Red up, green down",
+            "zh-Hant": "紅升綠跌"
+          }
+        ],
+        "default": "green",
+        "implies": {
+          "down_color": {
+            "green": "red",
+            "red": "green"
+          }
+        }
+      },
+      "down_color": {
+        "type": "string",
+        "title": {
+          "en": "Loss colour",
+          "zh-Hant": "跌嘅顏色"
+        },
+        "description": {
+          "en": "Automatically set to the opposite of your gain colour above.",
+          "zh-Hant": "會自動跟返上面「升嘅顏色」嘅相反顏色。"
+        },
+        "enum": [
+          "red",
+          "green"
+        ],
+        "enum_titles": [
+          {
+            "en": "Red",
+            "zh-Hant": "紅"
+          },
+          {
+            "en": "Green",
+            "zh-Hant": "綠"
+          }
+        ],
+        "default": "red"
+      }
+    },
+    "required": [
+      "symbols",
+      "up_color"
+    ],
+    "additionalProperties": false
+  },
+  "secrets": {
+    "api_key": {
+      "hint": "Finnhub API key (free tier works) — finnhub.io dashboard",
+      "sent_to": [
+        "finnhub.io"
+      ]
+    }
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "quotes",
+        "type": "https",
+        "for_each": "params.symbols",
+        "url": "https://finnhub.io/api/v1/quote?symbol={{each}}",
+        "headers": {
+          "X-Finnhub-Token": "{{secrets.api_key}}",
+          "Accept": "application/json"
+        },
+        "format": "json",
+        "max_bytes": 4096,
+        "collect": {
+          "field": "quotes",
+          "extract": {
+            "price": "c|round(2)",
+            "chg": "d|round(2)",
+            "pct": "dp|round(2)"
+          }
+        }
+      }
+    ]
+  },
+  "render": {
+    "chrome": "standard",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          12,
+          24,
+          12,
+          24
+        ],
+        "children": [
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "list",
+            "bind": "data.quotes",
+            "max_rows": 6,
+            "gap": 12,
+            "empty_text": "No symbols configured · 未設定股票代號",
+            "row": [
+              {
+                "type": "row",
+                "gap": 12,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "{{item.each}}",
+                    "size": "large",
+                    "weight": "bold",
+                    "flex": 1
+                  },
+                  {
+                    "type": "icon",
+                    "name": "arrow_up",
+                    "size": "small",
+                    "color": {
+                      "param": "up_color"
+                    },
+                    "when": "item.pct >= '0'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "arrow_down",
+                    "size": "small",
+                    "color": {
+                      "param": "down_color"
+                    },
+                    "when": "item.pct < '0'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.chg|sign_char}}{{item.chg|abs|round(2)}} ({{item.pct|sign_char}}{{item.pct|abs|round(2)}}%)",
+                    "size": "medium",
+                    "align": "right",
+                    "color": {
+                      "param": "up_color"
+                    },
+                    "when": "item.pct >= '0'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.chg|sign_char}}{{item.chg|abs|round(2)}} ({{item.pct|sign_char}}{{item.pct|abs|round(2)}}%)",
+                    "size": "medium",
+                    "align": "right",
+                    "color": {
+                      "param": "down_color"
+                    },
+                    "when": "item.pct < '0'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.price|round(2)}}",
+                    "size": "large",
+                    "weight": "bold",
+                    "align": "right"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 240
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "from": "21:30",
+        "to": "23:59",
+        "every_min": 15
+      },
+      {
+        "days": [
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat"
+        ],
+        "from": "00:00",
+        "to": "04:00",
+        "every_min": 15
+      }
+    ]
+  }
+}

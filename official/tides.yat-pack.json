@@ -1,0 +1,423 @@
+{
+  "yat": 1,
+  "id": "tides",
+  "version": "2.3.0",
+  "name": {
+    "en": "Tides",
+    "zh-Hant": "潮汐"
+  },
+  "description": {
+    "en": "Today's high and low tide predictions for one Hong Kong Observatory tide station, with a next-tide marker.",
+    "zh-Hant": "顯示香港天文台其中一個潮汐站今日嘅高低潮時間同高度，並標示下一個潮汐。"
+  },
+  "aliases": {
+    "en": [
+      "tides",
+      "tide times"
+    ],
+    "zh-Hant": [
+      "潮汐",
+      "潮汐時間"
+    ],
+    "jyutping": [
+      "ciu4 sik6"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "station": {
+        "type": "string",
+        "title": {
+          "en": "Tide station",
+          "zh-Hant": "潮汐站"
+        },
+        "description": {
+          "en": "Pick the tide station nearest you.",
+          "zh-Hant": "揀最近你嘅潮汐站。"
+        },
+        "enum": [
+          "CCH",
+          "CLK",
+          "KLW",
+          "LOP",
+          "MWC",
+          "QUB",
+          "SPW",
+          "TAO",
+          "TBT",
+          "TMW",
+          "TPK",
+          "WAG"
+        ],
+        "enum_titles": [
+          {
+            "en": "Cheung Chau",
+            "zh-Hant": "長洲"
+          },
+          {
+            "en": "Chek Lap Kok",
+            "zh-Hant": "赤鱲角"
+          },
+          {
+            "en": "Ko Lau Wan",
+            "zh-Hant": "高流灣"
+          },
+          {
+            "en": "Lok On Pai",
+            "zh-Hant": "樂安排"
+          },
+          {
+            "en": "Ma Wan",
+            "zh-Hant": "馬灣"
+          },
+          {
+            "en": "Quarry Bay",
+            "zh-Hant": "鰂魚涌"
+          },
+          {
+            "en": "Shek Pik",
+            "zh-Hant": "石壁"
+          },
+          {
+            "en": "Tai O",
+            "zh-Hant": "大澳"
+          },
+          {
+            "en": "Tsim Bei Tsui",
+            "zh-Hant": "尖鼻咀"
+          },
+          {
+            "en": "Tai Miu Wan",
+            "zh-Hant": "大廟灣"
+          },
+          {
+            "en": "Tai Po Kau",
+            "zh-Hant": "大埔滘"
+          },
+          {
+            "en": "Waglan Island",
+            "zh-Hant": "橫瀾島"
+          }
+        ],
+        "default": "TPK"
+      },
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "Language",
+          "zh-Hant": "語言"
+        },
+        "enum": [
+          "en",
+          "zh",
+          "both"
+        ],
+        "enum_titles": [
+          {
+            "en": "English"
+          },
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "Bilingual",
+            "zh-Hant": "雙語"
+          }
+        ],
+        "default": "both",
+        "description": {
+          "en": "Which language(s) to show on the panel.",
+          "zh-Hant": "畫面用邊種語言顯示。"
+        }
+      }
+    },
+    "required": [
+      "station",
+      "lang"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "hlt",
+        "type": "https",
+        "url": "https://data.weather.gov.hk/weatherAPI/opendata/opendata.php?dataType=HLT&station={{params.station}}&year={{now|date_fmt('YYYY')}}&month={{now|date_fmt('M')}}&day={{now|date_fmt('D')}}&rformat=json",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "format": "json",
+        "max_bytes": 4096,
+        "extract": {
+          "tide1_time": "data[0][2]",
+          "tide1_height": "data[0][3]",
+          "tide2_time": "data[0][4]",
+          "tide2_height": "data[0][5]",
+          "tide3_time": "data[0][6]",
+          "tide3_height": "data[0][7]",
+          "tide4_time": "data[0][8]",
+          "tide4_height": "data[0][9]"
+        }
+      }
+    ]
+  },
+  "strings": {
+    "title": {
+      "en": "Tide Times",
+      "zh-Hant": "潮汐預報"
+    },
+    "time_hdr": {
+      "en": "Time",
+      "zh-Hant": "時間"
+    },
+    "height_hdr": {
+      "en": "Height (m)",
+      "zh-Hant": "高度（米）"
+    }
+  },
+  "render": {
+    "chrome": "standard",
+    "lang_param": "lang",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          10,
+          24,
+          10,
+          24
+        ],
+        "gap": 6,
+        "children": [
+          {
+            "type": "text",
+            "value": "{{params.station|enum_title('station')}} {{strings.title}}",
+            "size": "large",
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "value": "{{now|date_fmt('YYYY年M月D日')}} {{now|weekday('zh-Hant')}}",
+            "size": "small",
+            "when": "params.lang != 'en'"
+          },
+          {
+            "type": "text",
+            "value": "{{now|date_fmt('D/M/YYYY')}} {{now|weekday('en-short')}}",
+            "size": "small",
+            "when": "params.lang != 'zh'"
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "gap": 8,
+            "children": [
+              {
+                "type": "text",
+                "value": "{{strings.time_hdr}}",
+                "size": "small",
+                "weight": "bold"
+              },
+              {
+                "type": "spacer",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "{{strings.height_hdr}}",
+                "size": "small",
+                "weight": "bold",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": 12,
+            "align": "center",
+            "when": "data.tide1_time",
+            "children": [
+              {
+                "type": "icon",
+                "name": "arrow_right",
+                "size": "small",
+                "color": "info",
+                "when": "data.tide1_time > '{{now|date_fmt('HHmm')}}'"
+              },
+              {
+                "type": "icon",
+                "name": "clock",
+                "size": "small",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide1_time|time_hhmm}}",
+                "size": "large",
+                "weight": "bold"
+              },
+              {
+                "type": "spacer",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide1_height}} m",
+                "size": "large",
+                "color": "info",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": 12,
+            "align": "center",
+            "when": "data.tide2_time",
+            "children": [
+              {
+                "type": "icon",
+                "name": "arrow_right",
+                "size": "small",
+                "color": "info",
+                "when": {
+                  "all": [
+                    "data.tide2_time > '{{now|date_fmt('HHmm')}}'",
+                    "data.tide1_time <= '{{now|date_fmt('HHmm')}}'"
+                  ]
+                }
+              },
+              {
+                "type": "icon",
+                "name": "clock",
+                "size": "small",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide2_time|time_hhmm}}",
+                "size": "large",
+                "weight": "bold"
+              },
+              {
+                "type": "spacer",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide2_height}} m",
+                "size": "large",
+                "color": "info",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": 12,
+            "align": "center",
+            "when": "data.tide3_time",
+            "children": [
+              {
+                "type": "icon",
+                "name": "arrow_right",
+                "size": "small",
+                "color": "info",
+                "when": {
+                  "all": [
+                    "data.tide3_time > '{{now|date_fmt('HHmm')}}'",
+                    "data.tide2_time <= '{{now|date_fmt('HHmm')}}'"
+                  ]
+                }
+              },
+              {
+                "type": "icon",
+                "name": "clock",
+                "size": "small",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide3_time|time_hhmm}}",
+                "size": "large",
+                "weight": "bold"
+              },
+              {
+                "type": "spacer",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide3_height}} m",
+                "size": "large",
+                "color": "info",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": 12,
+            "align": "center",
+            "when": "data.tide4_time",
+            "children": [
+              {
+                "type": "icon",
+                "name": "arrow_right",
+                "size": "small",
+                "color": "info",
+                "when": {
+                  "all": [
+                    "data.tide4_time > '{{now|date_fmt('HHmm')}}'",
+                    "data.tide3_time <= '{{now|date_fmt('HHmm')}}'"
+                  ]
+                }
+              },
+              {
+                "type": "icon",
+                "name": "clock",
+                "size": "small",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide4_time|time_hhmm}}",
+                "size": "large",
+                "weight": "bold"
+              },
+              {
+                "type": "spacer",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "{{data.tide4_height}} m",
+                "size": "large",
+                "color": "info",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 60
+    }
+  }
+}

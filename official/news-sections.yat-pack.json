@@ -1,0 +1,221 @@
+{
+  "yat": 1,
+  "id": "news-sections",
+  "version": "3.1.0",
+  "name": {
+    "en": "News Sections",
+    "zh-Hant": "新聞分類"
+  },
+  "description": {
+    "en": "RTHK express news: pick any of the five sections — local, Greater China, world, finance, sport. Each pick shows a section header and its three latest headlines with publish times.",
+    "zh-Hant": "香港電台即時新聞：五個分類（本地、大中華、國際、財經、體育）任選，每個分類顯示標題及最新三則頭條連發稿時間。"
+  },
+  "aliases": {
+    "en": [
+      "news",
+      "news sections"
+    ],
+    "zh-Hant": [
+      "新聞",
+      "即時新聞"
+    ],
+    "jyutping": [
+      "san1 man4",
+      "zik1 si4 san1 man4"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "sections": {
+        "type": "array",
+        "title": {
+          "en": "News sections",
+          "zh-Hant": "新聞分類"
+        },
+        "description": {
+          "en": "Pick the sections you want; each one shows its own headlines.",
+          "zh-Hant": "揀你想睇嘅分類，每個分類會顯示自己嘅頭條。"
+        },
+        "minItems": 1,
+        "maxItems": 5,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "c_expressnews_clocal",
+            "c_expressnews_greaterchina",
+            "c_expressnews_cinternational",
+            "c_expressnews_cfinance",
+            "c_expressnews_csport"
+          ],
+          "enum_titles": [
+            {
+              "en": "Local",
+              "zh-Hant": "本地"
+            },
+            {
+              "en": "Greater China",
+              "zh-Hant": "大中華"
+            },
+            {
+              "en": "World",
+              "zh-Hant": "國際"
+            },
+            {
+              "en": "Finance",
+              "zh-Hant": "財經"
+            },
+            {
+              "en": "Sport",
+              "zh-Hant": "體育"
+            }
+          ]
+        },
+        "default": [
+          "c_expressnews_clocal",
+          "c_expressnews_cinternational",
+          "c_expressnews_cfinance",
+          "c_expressnews_csport"
+        ]
+      },
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "Section header language",
+          "zh-Hant": "標題語言"
+        },
+        "enum": [
+          "en",
+          "zh",
+          "both"
+        ],
+        "enum_titles": [
+          {
+            "en": "English"
+          },
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "Bilingual",
+            "zh-Hant": "雙語"
+          }
+        ],
+        "default": "both",
+        "description": {
+          "en": "Which language(s) to show section headers in.",
+          "zh-Hant": "分類標題用邊種語言顯示。"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "feeds",
+        "type": "https",
+        "for_each": "params.sections",
+        "url": "https://rthk9.rthk.hk/rthk/news/rss/{{each}}.xml",
+        "format": "rss",
+        "collect": {
+          "field": "sections",
+          "extract": {
+            "top": "items|first(3)"
+          }
+        }
+      }
+    ]
+  },
+  "render": {
+    "chrome": "standard",
+    "lang_param": "lang",
+    "widgets": [
+      {
+        "type": "column",
+        "padding": [
+          6,
+          20,
+          6,
+          20
+        ],
+        "children": [
+          {
+            "type": "list",
+            "bind": "data.sections",
+            "max_rows": 5,
+            "gap": 10,
+            "row": [
+              {
+                "type": "text",
+                "value": "{{item.each|enum_title('sections')}}",
+                "size": "small",
+                "weight": "bold",
+                "flex": 1
+              },
+              {
+                "type": "list",
+                "bind": "item.top",
+                "max_rows": 3,
+                "gap": 2,
+                "flex": 4,
+                "empty_text": "暫無新聞 No news items",
+                "row": [
+                  {
+                    "type": "row",
+                    "gap": 12,
+                    "children": [
+                      {
+                        "type": "text",
+                        "value": "{{index}}. {{item.title}}",
+                        "size": "small",
+                        "max_lines": 1,
+                        "flex": 1
+                      },
+                      {
+                        "type": "text",
+                        "value": "{{item.pub_date|time_hhmm}}",
+                        "size": "small",
+                        "color": "info",
+                        "when": "item.pub_date"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "value": "財經內容僅供參考 Finance content is informational only",
+            "size": "small",
+            "color": "info",
+            "align": "right",
+            "when": "params.sections has 'c_expressnews_cfinance'"
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 60
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "from": "07:00",
+        "to": "09:30",
+        "every_min": 20
+      }
+    ]
+  }
+}

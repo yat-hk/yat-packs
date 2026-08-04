@@ -1,0 +1,308 @@
+{
+  "yat": 1,
+  "id": "hacker-news-highlights",
+  "version": "1.0.0",
+  "name": {
+    "en": "Hacker News Highlights",
+    "zh-Hant": "Hacker News 精選"
+  },
+  "description": {
+    "en": "Top Hacker News front-page stories that meet your points threshold.",
+    "zh-Hant": "顯示達到自訂分數門檻嘅 Hacker News 首頁熱門文章。"
+  },
+  "aliases": {
+    "en": [
+      "hacker news",
+      "tech highlights"
+    ],
+    "zh-Hant": [
+      "黑客新聞",
+      "科技熱話"
+    ],
+    "jyutping": [
+      "hak1 haak3 san1 man4",
+      "fo1 gei6 jit6 waa6"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "story_count": {
+        "type": "integer",
+        "title": {
+          "en": "Stories shown",
+          "zh-Hant": "顯示幾多篇"
+        },
+        "description": {
+          "en": "Maximum number of front-page stories to show.",
+          "zh-Hant": "最多顯示幾多篇熱門文章。"
+        },
+        "minimum": 1,
+        "maximum": 5,
+        "default": 5
+      },
+      "min_points": {
+        "type": "integer",
+        "title": {
+          "en": "Minimum points",
+          "zh-Hant": "最少分數"
+        },
+        "description": {
+          "en": "Hide stories with fewer points than this.",
+          "zh-Hant": "分數低過呢個數嘅文章唔會顯示。"
+        },
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 50
+      }
+    },
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "stories",
+        "type": "https",
+        "url": "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage={{params.story_count}}&numericFilters=points%3E%3D{{params.min_points}}",
+        "format": "json",
+        "extract": {
+          "story_count": "hits|length",
+          "title1": "hits[0].title",
+          "points1": "hits[0].points",
+          "title2": "hits[1].title",
+          "points2": "hits[1].points",
+          "title3": "hits[2].title",
+          "points3": "hits[2].points",
+          "title4": "hits[3].title",
+          "points4": "hits[3].points",
+          "title5": "hits[4].title",
+          "points5": "hits[4].points"
+        }
+      }
+    ]
+  },
+  "render": {
+    "chrome": "standard",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          9,
+          24,
+          9,
+          24
+        ],
+        "gap": 5,
+        "children": [
+          {
+            "type": "row",
+            "align": "center",
+            "children": [
+              {
+                "type": "text",
+                "value": "{{data.story_count}} stories",
+                "size": "small",
+                "weight": "bold",
+                "color": "info",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "≥ {{params.min_points}} pts",
+                "size": "small",
+                "align": "right",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "align": "start",
+            "gap": 18,
+            "when": "data.title1 exists",
+            "children": [
+              {
+                "type": "column",
+                "align": "center",
+                "children": [
+                  {
+                    "type": "bignum",
+                    "value": "{{data.points1}}",
+                    "size": "large",
+                    "color": "accent"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "flex": 1,
+                "gap": 5,
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "#1 · points",
+                    "size": "small",
+                    "weight": "bold",
+                    "color": "accent"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{data.title1}}",
+                    "size": "medium",
+                    "weight": "bold",
+                    "max_lines": 2
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "value": "未有文章達到 {{params.min_points}} 分 No stories meet the threshold",
+            "size": "large",
+            "weight": "bold",
+            "align": "center",
+            "max_lines": 2,
+            "flex": 1,
+            "when": "data.title1 missing"
+          },
+          {
+            "type": "divider",
+            "when": "data.title2 exists"
+          },
+          {
+            "type": "column",
+            "gap": 1,
+            "when": "data.title2 exists",
+            "children": [
+              {
+                "type": "text",
+                "value": "#2  {{data.points2}} points",
+                "size": "small",
+                "weight": "bold",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.title2}}",
+                "size": "small",
+                "max_lines": 1
+              }
+            ]
+          },
+          {
+            "type": "divider",
+            "when": "data.title3 exists"
+          },
+          {
+            "type": "column",
+            "gap": 1,
+            "when": "data.title3 exists",
+            "children": [
+              {
+                "type": "text",
+                "value": "#3  {{data.points3}} points",
+                "size": "small",
+                "weight": "bold",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.title3}}",
+                "size": "small",
+                "max_lines": 1
+              }
+            ]
+          },
+          {
+            "type": "divider",
+            "when": "data.title4 exists"
+          },
+          {
+            "type": "column",
+            "gap": 1,
+            "when": "data.title4 exists",
+            "children": [
+              {
+                "type": "text",
+                "value": "#4  {{data.points4}} points",
+                "size": "small",
+                "weight": "bold",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.title4}}",
+                "size": "small",
+                "max_lines": 1
+              }
+            ]
+          },
+          {
+            "type": "divider",
+            "when": "data.title5 exists"
+          },
+          {
+            "type": "column",
+            "gap": 1,
+            "when": "data.title5 exists",
+            "children": [
+              {
+                "type": "text",
+                "value": "#5  {{data.points5}} points",
+                "size": "small",
+                "weight": "bold",
+                "color": "info"
+              },
+              {
+                "type": "text",
+                "value": "{{data.title5}}",
+                "size": "small",
+                "max_lines": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 720
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "from": "07:00",
+        "to": "08:00",
+        "every_min": 60
+      },
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "from": "18:00",
+        "to": "19:00",
+        "every_min": 60
+      }
+    ]
+  }
+}

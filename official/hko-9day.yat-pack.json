@@ -1,0 +1,328 @@
+{
+  "yat": 1,
+  "id": "hko-9day",
+  "version": "1.0.0",
+  "name": {
+    "en": "9-Day Forecast",
+    "zh-Hant": "九天天氣預報"
+  },
+  "description": {
+    "en": "Hong Kong Observatory's 9-day forecast: day, high/low temperature and a weather icon for each of the next few days (territory-wide, not per-district).",
+    "zh-Hant": "香港天文台九天天氣預報：顯示未來幾日嘅日子、最高最低氣溫同天氣圖示（全港適用，並非分區）。"
+  },
+  "aliases": {
+    "en": [
+      "9 day forecast",
+      "nine day forecast",
+      "weather forecast"
+    ],
+    "zh-Hant": [
+      "九天天氣預報",
+      "天氣預報"
+    ],
+    "jyutping": [
+      "gau2 tin1 tin1 hei3 jyu6 bou3"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "Language",
+          "zh-Hant": "語言"
+        },
+        "description": {
+          "en": "The Observatory's own feed comes in one language per fetch — pick which one drives the day names below.",
+          "zh-Hant": "天文台嘅資料每次只可以揀一種語言，揀返邊種嚟顯示下面嘅日子名稱。"
+        },
+        "enum": [
+          "tc",
+          "en"
+        ],
+        "enum_titles": [
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "English"
+          }
+        ],
+        "default": "tc"
+      },
+      "days": {
+        "type": "integer",
+        "title": {
+          "en": "Days shown",
+          "zh-Hant": "顯示日數"
+        },
+        "description": {
+          "en": "How many of the 9 forecast days to list.",
+          "zh-Hant": "喺九日預報入面，想顯示幾多日。"
+        },
+        "minimum": 3,
+        "maximum": 9,
+        "default": 9
+      }
+    },
+    "required": [
+      "lang",
+      "days"
+    ],
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": [
+      {
+        "id": "forecast",
+        "type": "https",
+        "url": "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang={{params.lang}}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "format": "json",
+        "max_bytes": 16384,
+        "extract": {
+          "forecast": "weatherForecast|first({{params.days}})",
+          "updated": "updateTime"
+        }
+      }
+    ]
+  },
+  "render": {
+    "chrome": "standard",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [
+          12,
+          28,
+          10,
+          28
+        ],
+        "gap": 6,
+        "children": [
+          {
+            "type": "text",
+            "value": "全港適用 Territory-wide (not per-district)",
+            "size": "small"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "list",
+            "bind": "data.forecast",
+            "max_rows": {
+              "param": "days"
+            },
+            "gap": 4,
+            "empty_text": "暫無預報資料 No forecast data",
+            "row": [
+              {
+                "type": "row",
+                "gap": 10,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "text",
+                    "value": "{{item.week}}",
+                    "size": "medium",
+                    "weight": "bold",
+                    "flex": 1
+                  },
+                  {
+                    "type": "icon",
+                    "name": "sun",
+                    "size": "small",
+                    "color": "yellow",
+                    "when": {
+                      "all": [
+                        "item.ForecastIcon >= '50'",
+                        "item.ForecastIcon <= '52'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "icon",
+                    "name": "cloud_sun",
+                    "size": "small",
+                    "color": "yellow",
+                    "when": {
+                      "all": [
+                        "item.ForecastIcon >= '53'",
+                        "item.ForecastIcon <= '54'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "icon",
+                    "name": "cloud",
+                    "size": "small",
+                    "color": "black",
+                    "when": {
+                      "any": [
+                        "item.ForecastIcon == '60'",
+                        "item.ForecastIcon == '61'",
+                        "item.ForecastIcon == '77'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "icon",
+                    "name": "drizzle",
+                    "size": "small",
+                    "color": "blue",
+                    "when": "item.ForecastIcon == '62'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "rain",
+                    "size": "small",
+                    "color": "blue",
+                    "when": "item.ForecastIcon == '63'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "rain_heavy",
+                    "size": "small",
+                    "color": "blue",
+                    "when": {
+                      "any": [
+                        "item.ForecastIcon == '64'",
+                        "item.ForecastIcon == '93'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "icon",
+                    "name": "thunder",
+                    "size": "small",
+                    "color": "black",
+                    "when": "item.ForecastIcon == '65'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "wind",
+                    "size": "small",
+                    "color": "black",
+                    "when": {
+                      "any": [
+                        "item.ForecastIcon == '80'",
+                        "item.ForecastIcon == '92'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "icon",
+                    "name": "humidity",
+                    "size": "small",
+                    "color": "blue",
+                    "when": "item.ForecastIcon == '82'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "fog",
+                    "size": "small",
+                    "color": "black",
+                    "when": {
+                      "any": [
+                        "item.ForecastIcon == '83'",
+                        "item.ForecastIcon == '84'",
+                        "item.ForecastIcon == '85'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "icon",
+                    "name": "thermometer_hot",
+                    "size": "small",
+                    "color": "red",
+                    "when": "item.ForecastIcon == '90'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "thermometer_cold",
+                    "size": "small",
+                    "color": "blue",
+                    "when": "item.ForecastIcon == '91'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "moon",
+                    "size": "small",
+                    "color": "black",
+                    "when": {
+                      "all": [
+                        "item.ForecastIcon >= '70'",
+                        "item.ForecastIcon <= '76'"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.forecastMaxtemp.value}}°",
+                    "size": "medium",
+                    "weight": "bold",
+                    "color": "red",
+                    "align": "right"
+                  },
+                  {
+                    "type": "text",
+                    "value": "/",
+                    "size": "small",
+                    "align": "right"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.forecastMintemp.value}}°",
+                    "size": "medium",
+                    "color": "blue",
+                    "align": "right"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "spacer",
+            "flex": 1
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "text",
+            "value": "天文台 HKO · 更新 Updated {{data.updated|time_hhmm}}",
+            "size": "small",
+            "align": "right"
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": {
+      "every_min": 180
+    },
+    "windows": [
+      {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "from": "06:00",
+        "to": "08:00",
+        "every_min": 30
+      }
+    ]
+  }
+}

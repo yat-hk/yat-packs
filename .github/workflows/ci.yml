@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pack-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout yat-packs
+        uses: actions/checkout@v4
+
+      - name: Read pinned core SHA
+        id: core
+        run: echo "sha=$(cat .core-ref)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout yat-hk/yat at the pinned SHA
+        uses: actions/checkout@v4
+        with:
+          repository: yat-hk/yat
+          ref: ${{ steps.core.outputs.sha }}
+          path: core
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate official packs against core's schema
+        run: npx --yes ajv-cli@5 validate --spec=draft2020 -s core/schema/yat-pack.schema.json -d "official/*.yat-pack.json"
+
+      - name: Validate community packs against core's schema
+        run: |
+          if compgen -G "community/*.yat-pack.json" > /dev/null; then
+            npx --yes ajv-cli@5 validate --spec=draft2020 -s core/schema/yat-pack.schema.json -d "community/*.yat-pack.json"
+          else
+            echo "no community packs yet — nothing to validate"
+          fi
+
+  render-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout yat-packs
+        uses: actions/checkout@v4
+
+      - name: Read pinned core SHA
+        id: core
+        run: echo "sha=$(cat .core-ref)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout yat-hk/yat at the pinned SHA
+        uses: actions/checkout@v4
+        with:
+          repository: yat-hk/yat
+          ref: ${{ steps.core.outputs.sha }}
+          path: core
+
+      - name: Build the native preview renderer
+        run: make -s -C core/tools/preview
+
+      - name: Render every pack against its fixtures and compare to goldens
+        run: YAT_CORE=core ./tests/run-tests.sh
+
+  safety-summary:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout yat-packs
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find packs changed by this PR
+        id: changed
+        run: |
+          set -euo pipefail
+          git diff --name-only --diff-filter=ACMR \
+            "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" \
+            -- 'official/*.yat-pack.json' 'community/*.yat-pack.json' \
+            > /tmp/changed-packs.txt || true
+          cat /tmp/changed-packs.txt
+
+      - name: Post safety summary
+        run: python3 tools/safety_summary.py $(cat /tmp/changed-packs.txt) >> "$GITHUB_STEP_SUMMARY"
