@@ -1,7 +1,7 @@
 {
   "yat": 1,
   "id": "commute-combo",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "name": { "en": "Commute Board", "zh-Hant": "通勤班次板" },
   "description": {
     "en": "KMB ETAs for up to 4 stops, one Citybus stop, and MTR next trains for any line and station code, grouped by operator on one page.",
@@ -124,6 +124,7 @@
         "type": "string",
         "title": { "en": "MTR station", "zh-Hant": "港鐵站" },
         "description": { "en": "Filled in automatically once you search for your station above.", "zh-Hant": "喺上面搵到你個站之後，呢格會自動填好。" },
+        "x-derived-from": "mtr_line",
         "pattern": "^[A-Z]{3}$",
         "minLength": 3,
         "maxLength": 3,
