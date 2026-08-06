@@ -317,6 +317,74 @@ elif [ -z "$YAT_GOLDEN_BOOTSTRAP" ]; then
   echo "FAIL: golden missing (goldens/temp-trend.png) — set YAT_GOLDEN_BOOTSTRAP=1 to (re)generate"; exit 1;
 fi
 
+# ---- 2.3.0: user-reported on hardware — the chart's X-axis "always ends at
+# ---- 21:00". Root cause: the Open-Meteo request used forecast_days=1, a
+# ---- fixed calendar-day window (00:00-21:00 every-3-hours), so the frame
+# ---- never moved until local midnight rolled the whole day over — a device
+# ---- glanced at in the evening showed a dead, already-happened afternoon.
+# ---- Fix is a pure request reshape, no engine/spec change: swap
+# ---- forecast_days's grip on the *hourly* block for past_hours=6 +
+# ---- forecast_hours=16, which Open-Meteo anchors to the live clock instead
+# ---- of the calendar day (forecast_days=1 stays, now scoped to the `daily`
+# ---- hi/lo block only, which is genuinely a "today" figure). The result is
+# ---- an 8-point window from -6h to +15h around whatever "now" is — roughly
+# ---- 6 hours of recent history plus the next 15 hours, still on the
+# ---- existing 3-hourly grid, same response size. Extraction (`temps`,
+# ---- `first_hour`, `last_hour`) is untouched: it already just takes the
+# ---- whole hourly array and its own first/last timestamp, so the labels
+# ---- move for free once the array itself is now-anchored.
+# ----
+# ---- Verified against Open-Meteo directly (`past_hours=6&forecast_hours=16`
+# ---- against the live API) before writing these fixtures: the two fixtures
+# ---- below are hand-built to the same 8-point/-6h..+15h shape real
+# ---- responses take at two different times of day, sharing every
+# ---- overlapping timestamp's value so they read as one consistent day
+# ---- observed from two different moments, not two unrelated days. Because
+# ---- the window is resolved by the *request* (Open-Meteo's live clock), not
+# ---- by an in-pack now-relative filter, "same fixture, different --now"
+# ---- doesn't apply here — there is no engine feature to filter a date
+# ---- range out of one document (extraction filters are equality-only,
+# ---- §6.1/§6.4; no ordering comparator exists in that grammar). What *is*
+# ---- tested is the property that actually matters: given whatever window
+# ---- the request comes back with, the pack's labels and plotted line
+# ---- faithfully track it instead of assuming a fixed shape — morning
+# ---- fixture spans 03:00 today to 00:00 tomorrow (the day still ahead);
+# ---- evening fixture spans 15:00 today to 12:00 tomorrow (tonight into
+# ---- tomorrow morning) — proving the frame actually moves.
+"$PREVIEW" "$TT" --doc meteo=fixtures/temp-trend.meteo-morning.json --now 1785114000 --out /tmp/yat-tt-morning.png 2>/tmp/yat-tt-morning.log
+grep -q '"first_hour": "2026-07-27T03:00"' /tmp/yat-tt-morning.log || { echo "FAIL: temp-trend morning: first_hour did not extract the rolling window start"; exit 1; }
+grep -q '"last_hour": "2026-07-28T00:00"' /tmp/yat-tt-morning.log || { echo "FAIL: temp-trend morning: last_hour did not extract the rolling window end"; exit 1; }
+grep -q 'render warn' /tmp/yat-tt-morning.log && { echo "FAIL: temp-trend morning render produced a warning"; exit 1; }
+
+"$PREVIEW" "$TT" --doc meteo=fixtures/temp-trend.meteo-evening.json --now 1785157200 --out /tmp/yat-tt-evening.png 2>/tmp/yat-tt-evening.log
+grep -q '"first_hour": "2026-07-27T15:00"' /tmp/yat-tt-evening.log || { echo "FAIL: temp-trend evening: first_hour did not extract the rolling window start"; exit 1; }
+grep -q '"last_hour": "2026-07-28T12:00"' /tmp/yat-tt-evening.log || { echo "FAIL: temp-trend evening: last_hour did not extract the rolling window end"; exit 1; }
+grep -q 'render warn' /tmp/yat-tt-evening.log && { echo "FAIL: temp-trend evening render produced a warning"; exit 1; }
+
+# the two windows must produce genuinely different renders — the bug's
+# signature was the axis (and therefore the whole panel) never changing.
+cmp -s /tmp/yat-tt-morning.png /tmp/yat-tt-evening.png && { echo "FAIL: temp-trend morning and evening windows rendered byte-identical (the reported bug)"; exit 1; }
+
+# determinism, each window
+"$PREVIEW" "$TT" --doc meteo=fixtures/temp-trend.meteo-morning.json --now 1785114000 --out /tmp/yat-tt-morning-b.png 2>/dev/null
+cmp -s /tmp/yat-tt-morning.png /tmp/yat-tt-morning-b.png || { echo "FAIL: nondeterministic render (temp-trend morning)"; exit 1; }
+"$PREVIEW" "$TT" --doc meteo=fixtures/temp-trend.meteo-evening.json --now 1785157200 --out /tmp/yat-tt-evening-b.png 2>/dev/null
+cmp -s /tmp/yat-tt-evening.png /tmp/yat-tt-evening-b.png || { echo "FAIL: nondeterministic render (temp-trend evening)"; exit 1; }
+
+# golden compare (regenerate with: cp /tmp/yat-tt-morning.png goldens/temp-trend-morning.png)
+if [ -f goldens/temp-trend-morning.png ]; then
+  cmp -s /tmp/yat-tt-morning.png goldens/temp-trend-morning.png || { echo "FAIL: golden mismatch (goldens/temp-trend-morning.png)"; exit 1; }
+elif [ -z "$YAT_GOLDEN_BOOTSTRAP" ]; then
+  echo "FAIL: golden missing (goldens/temp-trend-morning.png) — set YAT_GOLDEN_BOOTSTRAP=1 to (re)generate"; exit 1;
+fi
+
+# golden compare (regenerate with: cp /tmp/yat-tt-evening.png goldens/temp-trend-evening.png)
+if [ -f goldens/temp-trend-evening.png ]; then
+  cmp -s /tmp/yat-tt-evening.png goldens/temp-trend-evening.png || { echo "FAIL: golden mismatch (goldens/temp-trend-evening.png)"; exit 1; }
+elif [ -z "$YAT_GOLDEN_BOOTSTRAP" ]; then
+  echo "FAIL: golden missing (goldens/temp-trend-evening.png) — set YAT_GOLDEN_BOOTSTRAP=1 to (re)generate"; exit 1;
+fi
+
 # ---- §9.10 image placeholder. photo-frame's whole body is one 800x404 image
 # ---- widget, so "the box renders empty" on a fetch failure meant a blank
 # ---- panel — indistinguishable from a dead device on a screen that holds its

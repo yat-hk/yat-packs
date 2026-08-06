@@ -1,14 +1,14 @@
 {
   "yat": 1,
   "id": "temp-trend",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "name": {
     "en": "Temperature Today",
     "zh-Hant": "今日氣溫"
   },
   "description": {
-    "en": "Current temperature, today's high/low, and today's 3-hourly temperature curve (observed + forecast) from Open-Meteo. Chart is pinned to an 8-36°C scale so hot and cool days actually look different.",
-    "zh-Hant": "現時氣溫、今日最高最低溫，以及今日每三小時氣溫曲線（實測加預報），數據來自 Open-Meteo。圖表採用固定 8 至 36°C 刻度（並非自動縮放），令炎熱同涼爽嘅日子睇落真係有分別，唔止上面嘅數字先睇得出。"
+    "en": "Current temperature, today's high/low, and a rolling 3-hourly curve (~6h back, ~15h ahead, observed + forecast) from Open-Meteo, pinned to an 8-36°C scale so hot and cool days look different.",
+    "zh-Hant": "現時氣溫、今日最高最低溫，以及一條跟住時間郁動嘅三小時氣溫曲線（大約過去六個鐘、未來十五個鐘，實測加預報），數據來自 Open-Meteo。圖表採用固定 8 至 36°C 刻度（並非自動縮放），令炎熱同涼爽嘅日子睇落真係有分別，唔止上面嘅數字先睇得出。"
   },
   "aliases": {
     "en": [
@@ -110,7 +110,7 @@
       {
         "id": "meteo",
         "type": "https",
-        "url": "https://api.open-meteo.com/v1/forecast?latitude={{params.latitude}}&longitude={{params.longitude}}&current=temperature_2m&hourly=temperature_2m&temporal_resolution=hourly_3&forecast_days=1&daily=temperature_2m_max,temperature_2m_min&timezone=auto",
+        "url": "https://api.open-meteo.com/v1/forecast?latitude={{params.latitude}}&longitude={{params.longitude}}&current=temperature_2m&hourly=temperature_2m&temporal_resolution=hourly_3&past_hours=6&forecast_hours=16&forecast_days=1&daily=temperature_2m_max,temperature_2m_min&timezone=auto",
         "format": "json",
         "max_bytes": 16384,
         "extract": {
@@ -127,8 +127,8 @@
   },
   "strings": {
     "caption": {
-      "en": "Today · every 3 hours (observed + forecast)",
-      "zh-Hant": "今日每三小時（實測＋預報）"
+      "en": "Every 3 hours, rolls with the clock (observed + forecast)",
+      "zh-Hant": "每三小時一次，跟住時間郁動（實測＋預報）"
     },
     "as_of": {
       "en": "as of",
