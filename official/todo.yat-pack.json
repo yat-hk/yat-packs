@@ -1,7 +1,8 @@
 {
   "yat": 1,
   "id": "todo",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "min_firmware": "0.4.0",
   "name": {
     "en": "To-Do List",
     "zh-Hant": "待辦事項"
