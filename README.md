@@ -5,9 +5,10 @@ serverless e-ink display platform built for everyday life in Hong Kong. A
 **pack** is one JSON file that turns a data source into a page on the panel;
 this repo is where they live and where pack pull requests merge directly.
 
-Engine, firmware, spec, and site live in the core repo,
-[yat-hk/yat](https://github.com/yat-hk/yat). This repo holds only packs and
-the fixtures/tests/CI that keep them honest.
+Engine, firmware, and spec live in the core repo,
+[yat-hk/yat](https://github.com/yat-hk/yat). The website lives at
+[yat.day](https://yat.day) and is a separate, private codebase. This repo
+holds only packs and the fixtures/tests/CI that keep them honest.
 
 ## Layout
 
