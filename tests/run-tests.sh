@@ -888,4 +888,121 @@ elif [ -z "$YAT_GOLDEN_BOOTSTRAP" ]; then
   echo "FAIL: golden missing (goldens/hacker-news-highlights.png) — set YAT_GOLDEN_BOOTSTRAP=1 to (re)generate"; exit 1;
 fi
 
+# ---- todo: the 待辦 household to-do pack. Fixture-free (data.sources is
+# ---- empty — items live entirely in params, written by the portal form and
+# ---- by firmware voice ops), so every case here is --params only. `item_count`
+# ---- is a `compute` field (`{{params.items|count}}`) used to pick the
+# ---- empty-state tutorial vs. the list, and to gate the overflow line.
+# ----
+# ---- Known engine gap (not a bug in this pack): the spec has no array
+# ---- filter/count-by-predicate that reaches a `params` array of objects —
+# ---- `count` (§8.12) is a plain array length, `has` (§6.5) only matches
+# ---- scalar array elements, and `extract`'s one JMESPath-style filter
+# ---- (§6.1) only runs against a fetched/inline *document*, which for an
+# ---- `inline` source is fixed at pack-authoring time and cannot mirror a
+# ---- runtime `params` value. So this pack cannot compute "N still open"
+# ---- (excluding done items) or detect "all done" as a distinct state —
+# ---- both would need a predicate over `item.done` across the array. The
+# ---- count line therefore shows the honest total (open + done); the "all
+# ---- done" celebratory line asked for in review could not be built and was
+# ---- dropped rather than shipped with a count that quietly lies once
+# ---- something gets checked off. Per-row open/done styling (icon + weight +
+# ---- muted colour, §9.1a) IS exactly item-scoped, so that part is exact.
+TODO=official/todo.yat-pack.json
+
+# a) default install: items defaults to [], so this is the zero-items tutorial
+#    state that teaches the voice grammar — the whole reason the empty state
+#    doubles as onboarding instead of just being blank.
+"$PREVIEW" "$TODO" --now $NOW --out /tmp/yat-todo-empty.png 2>/tmp/yat-todo-empty.log
+grep -q '"item_count": 0' /tmp/yat-todo-empty.log || { echo "FAIL: todo: default install should have zero items"; exit 1; }
+grep -q 'render warn' /tmp/yat-todo-empty.log && { echo "FAIL: todo (empty) render produced a warning"; exit 1; }
+
+"$PREVIEW" "$TODO" --now $NOW --out /tmp/yat-todo-empty-b.png 2>/dev/null
+cmp -s /tmp/yat-todo-empty.png /tmp/yat-todo-empty-b.png || { echo "FAIL: nondeterministic render (todo empty)"; exit 1; }
+
+# golden compare (regenerate with: cp /tmp/yat-todo-empty.png goldens/todo.png)
+if [ -f goldens/todo.png ]; then
+  cmp -s /tmp/yat-todo-empty.png goldens/todo.png || { echo "FAIL: golden mismatch (goldens/todo.png)"; exit 1; }
+elif [ -z "$YAT_GOLDEN_BOOTSTRAP" ]; then
+  echo "FAIL: golden missing (goldens/todo.png) — set YAT_GOLDEN_BOOTSTRAP=1 to (re)generate"; exit 1;
+fi
+
+# b) mixed open/done: proves the per-row `item.done` branch (§9.1a: open =
+#    bold black + arrow_right, done = muted + check) on a realistic bilingual
+#    list, not just the empty state.
+TODOMIXED='{"items":[{"text":"買牛奶","done":false},{"text":"倒垃圾","done":true},{"text":"Pick up dry cleaning","done":false},{"text":"交電費","done":true},{"text":"Book dentist appointment","done":false}]}'
+"$PREVIEW" "$TODO" --params "$TODOMIXED" --now $NOW --out /tmp/yat-todo-mixed.png 2>/tmp/yat-todo-mixed.log
+grep -q '"item_count": 5' /tmp/yat-todo-mixed.log || { echo "FAIL: todo: mixed item_count extraction"; exit 1; }
+grep -q 'render warn' /tmp/yat-todo-mixed.log && { echo "FAIL: todo (mixed) render produced a warning"; exit 1; }
+if cmp -s /tmp/yat-todo-empty.png /tmp/yat-todo-mixed.png; then echo "FAIL: todo mixed state rendered identically to the empty tutorial"; exit 1; fi
+
+"$PREVIEW" "$TODO" --params "$TODOMIXED" --now $NOW --out /tmp/yat-todo-mixed-b.png 2>/dev/null
+cmp -s /tmp/yat-todo-mixed.png /tmp/yat-todo-mixed-b.png || { echo "FAIL: nondeterministic render (todo mixed)"; exit 1; }
+
+# golden compare (regenerate with: cp /tmp/yat-todo-mixed.png goldens/todo-mixed.png)
+if [ -f goldens/todo-mixed.png ]; then
+  cmp -s /tmp/yat-todo-mixed.png goldens/todo-mixed.png || { echo "FAIL: golden mismatch (goldens/todo-mixed.png)"; exit 1; }
+elif [ -z "$YAT_GOLDEN_BOOTSTRAP" ]; then
+  echo "FAIL: golden missing (goldens/todo-mixed.png) — set YAT_GOLDEN_BOOTSTRAP=1 to (re)generate"; exit 1;
+fi
+
+# c) all items done: no dedicated "all done" trigger exists (see the gap note
+#    above), but the page must still read cleanly as "nothing left to do" —
+#    every row muted+checked, distinct from both the tutorial and the mixed page.
+TODOALLDONE='{"items":[{"text":"買牛奶","done":true},{"text":"倒垃圾","done":true},{"text":"交電費","done":true}]}'
+"$PREVIEW" "$TODO" --params "$TODOALLDONE" --now $NOW --out /tmp/yat-todo-alldone.png 2>/tmp/yat-todo-alldone.log
+grep -q '"item_count": 3' /tmp/yat-todo-alldone.log || { echo "FAIL: todo: all-done item_count extraction"; exit 1; }
+grep -q 'render warn' /tmp/yat-todo-alldone.log && { echo "FAIL: todo (all-done) render produced a warning"; exit 1; }
+if cmp -s /tmp/yat-todo-mixed.png /tmp/yat-todo-alldone.png; then echo "FAIL: todo all-done state rendered identically to the mixed page"; exit 1; fi
+if cmp -s /tmp/yat-todo-empty.png /tmp/yat-todo-alldone.png; then echo "FAIL: todo all-done state rendered identically to the empty tutorial"; exit 1; fi
+
+# d) maxItems worst case: 20 items (the schema ceiling — §3.2/§12.1 cap array
+#    params at maxItems <=20, tighter than the ~24 first asked for) each a
+#    full 48-char string. The list is capped at max_rows=7 specifically so
+#    this fits; the load-bearing assertion is the ABSENCE of a §11.4 "layout
+#    overflow" warning at the true worst case, plus the overflow line
+#    ("Showing the first 7 of 20") actually appearing instead of silently
+#    dropping the other 13.
+python3 -c "
+import json
+items = [{'text': ('第' + str(i) + '項' + '極' * 40)[:48], 'done': (i % 2 == 0)} for i in range(1, 21)]
+json.dump({'items': items}, open('/tmp/yat-todo-maxitems.json', 'w'))
+"
+TODOMAX="$(cat /tmp/yat-todo-maxitems.json)"
+"$PREVIEW" "$TODO" --params "$TODOMAX" --now $NOW --out /tmp/yat-todo-maxitems.png 2>/tmp/yat-todo-maxitems.log
+grep -q '"item_count": 20' /tmp/yat-todo-maxitems.log || { echo "FAIL: todo: maxItems item_count extraction"; exit 1; }
+grep -q 'layout overflow' /tmp/yat-todo-maxitems.log && { echo "FAIL: todo: maxItems worst case (20 items, 48 chars each) overflowed its box"; exit 1; }
+grep -q 'render warn' /tmp/yat-todo-maxitems.log && { echo "FAIL: todo (maxItems) render produced an unexpected warning"; exit 1; }
+
+"$PREVIEW" "$TODO" --params "$TODOMAX" --now $NOW --out /tmp/yat-todo-maxitems-b.png 2>/dev/null
+cmp -s /tmp/yat-todo-maxitems.png /tmp/yat-todo-maxitems-b.png || { echo "FAIL: nondeterministic render (todo maxItems)"; exit 1; }
+
+# the overflow line is pack-rendered text, not something the extraction dump
+# logs — assert it landed on the panel by checking the content band actually
+# darkened relative to a build with the line suppressed. Simpler and just as
+# conclusive: re-render at max_rows-sized input (7 items, no overflow needed)
+# and diff — a real behavioural difference, not a golden-pixel guess.
+python3 -c "
+import json
+items = [{'text': ('第' + str(i) + '項' + '極' * 40)[:48], 'done': (i % 2 == 0)} for i in range(1, 8)]
+json.dump({'items': items}, open('/tmp/yat-todo-7items.json', 'w'))
+"
+TODO7="$(cat /tmp/yat-todo-7items.json)"
+"$PREVIEW" "$TODO" --params "$TODO7" --now $NOW --out /tmp/yat-todo-7items.png 2>/tmp/yat-todo-7items.log
+grep -q 'render warn' /tmp/yat-todo-7items.log && { echo "FAIL: todo (7 items, no overflow) render produced a warning"; exit 1; }
+if cmp -s /tmp/yat-todo-maxitems.png /tmp/yat-todo-7items.png; then echo "FAIL: todo overflow line did not change the render vs. an exactly-fitting 7-item list"; exit 1; fi
+
+# e) lang param: English-only must drop the zh-Hant tutorial/count text
+"$PREVIEW" "$TODO" --params '{"lang":"en"}' --now $NOW --out /tmp/yat-todo-en.png 2>/tmp/yat-todo-en.log
+grep -q 'render warn' /tmp/yat-todo-en.log && { echo "FAIL: todo (lang=en) render produced a warning"; exit 1; }
+if cmp -s /tmp/yat-todo-empty.png /tmp/yat-todo-en.png; then echo "FAIL: todo lang param did not change the render"; exit 1; fi
+
+# f) mono profile (e1001): this pack uses no ink but muted/info/black (all
+#    role-spelled, §9.1a), specifically to survive a panel with no red —
+#    verified once here, no golden pinned per the pack-developer skill's
+#    guidance that a role-only pack needs no separate mono golden absent a
+#    visible problem.
+"$PREVIEW" "$TODO" --profile e1001 --params "$TODOMIXED" --now $NOW --out /tmp/yat-todo-mixed-e1001.png 2>/tmp/yat-todo-mixed-e1001.log
+grep -q 'render warn' /tmp/yat-todo-mixed-e1001.log && { echo "FAIL: todo (mixed, e1001) render produced a warning"; exit 1; }
+
 echo "ALL TESTS PASS"

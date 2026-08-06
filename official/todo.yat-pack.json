@@ -1,0 +1,284 @@
+{
+  "yat": 1,
+  "id": "todo",
+  "version": "1.0.0",
+  "name": {
+    "en": "To-Do List",
+    "zh-Hant": "待辦事項"
+  },
+  "description": {
+    "en": "Your household to-do list — add and check off items by voice, see what's left at a glance.",
+    "zh-Hant": "屋企待辦清單：用把口加項目、剔剔埋，一眼睇晒仲有幾多要做。"
+  },
+  "aliases": {
+    "en": [
+      "todo",
+      "to-do list",
+      "list"
+    ],
+    "zh-Hant": [
+      "待辦",
+      "唔好唔記得"
+    ],
+    "jyutping": [
+      "doi6 baan6",
+      "m4 hou2 m4 gei3 dak1"
+    ]
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "title": {
+          "en": "List title",
+          "zh-Hant": "清單標題"
+        },
+        "description": {
+          "en": "Heading shown at the top of the list.",
+          "zh-Hant": "顯示喺清單最上面嘅標題。"
+        },
+        "default": "屋企待辦",
+        "minLength": 1,
+        "maxLength": 24
+      },
+      "items": {
+        "type": "array",
+        "title": {
+          "en": "Items",
+          "zh-Hant": "項目"
+        },
+        "description": {
+          "en": "Up to 20 things to do. Add or check off items by saying them out loud, or edit them here.",
+          "zh-Hant": "最多20項要做嘅嘢。可以用把口講出嚟加/剔，又或者喺呢度直接編輯。"
+        },
+        "maxItems": 20,
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": {
+                "en": "Item",
+                "zh-Hant": "項目內容"
+              },
+              "description": {
+                "en": "What needs doing.",
+                "zh-Hant": "要做嘅嘢係咩。"
+              },
+              "minLength": 1,
+              "maxLength": 48
+            },
+            "done": {
+              "type": "boolean",
+              "title": {
+                "en": "Done",
+                "zh-Hant": "已完成"
+              },
+              "description": {
+                "en": "Whether this item is finished.",
+                "zh-Hant": "呢項係咪已經做完。"
+              },
+              "default": false
+            }
+          },
+          "required": [
+            "text",
+            "done"
+          ],
+          "additionalProperties": false
+        },
+        "default": []
+      },
+      "lang": {
+        "type": "string",
+        "title": {
+          "en": "List language",
+          "zh-Hant": "清單語言"
+        },
+        "description": {
+          "en": "Language for labels and the empty-list hint.",
+          "zh-Hant": "標籤同空清單提示用嘅語言。"
+        },
+        "enum": [
+          "en",
+          "zh",
+          "both"
+        ],
+        "enum_titles": [
+          {
+            "en": "English"
+          },
+          {
+            "en": "Chinese",
+            "zh-Hant": "中文"
+          },
+          {
+            "en": "Bilingual",
+            "zh-Hant": "雙語"
+          }
+        ],
+        "default": "both"
+      }
+    },
+    "additionalProperties": false
+  },
+  "data": {
+    "sources": []
+  },
+  "compute": {
+    "item_count": "{{params.items|count}}"
+  },
+  "strings": {
+    "empty_title": {
+      "en": "Nothing on the list yet",
+      "zh-Hant": "仲未有嘢要做"
+    },
+    "empty_hint": {
+      "en": "Press the green button and say \"Add buy milk\"",
+      "zh-Hant": "撳綠色掣，講『加 買牛奶』"
+    }
+  },
+  "render": {
+    "chrome": "standard",
+    "lang_param": "lang",
+    "widgets": [
+      {
+        "type": "column",
+        "flex": 1,
+        "padding": [16, 24, 12, 24],
+        "gap": 10,
+        "children": [
+          {
+            "type": "row",
+            "gap": 8,
+            "align": "center",
+            "children": [
+              {
+                "type": "text",
+                "value": "{{params.title}}",
+                "size": "large",
+                "weight": "bold",
+                "max_lines": 1
+              },
+              {
+                "type": "spacer",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "value": "共 {{data.item_count}} 件",
+                "size": "medium",
+                "color": "info",
+                "when": { "all": ["params.lang != 'en'", "data.item_count > '0'"] }
+              },
+              {
+                "type": "text",
+                "value": "{{data.item_count}} items",
+                "size": "medium",
+                "color": "info",
+                "when": { "all": ["params.lang != 'zh'", "data.item_count > '0'"] }
+              }
+            ]
+          },
+          {
+            "type": "divider",
+            "thickness": 1
+          },
+          {
+            "type": "column",
+            "flex": 1,
+            "align": "center",
+            "gap": 10,
+            "when": "data.item_count == '0'",
+            "children": [
+              { "type": "spacer", "flex": 1 },
+              {
+                "type": "text",
+                "value": "{{strings.empty_title}}",
+                "size": "large",
+                "weight": "bold",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "value": "{{strings.empty_hint}}",
+                "size": "medium",
+                "align": "center",
+                "color": "info",
+                "max_lines": 3
+              },
+              { "type": "spacer", "flex": 1 }
+            ]
+          },
+          {
+            "type": "list",
+            "bind": "params.items",
+            "max_rows": 7,
+            "gap": 6,
+            "when": "data.item_count > '0'",
+            "row": [
+              {
+                "type": "row",
+                "gap": 10,
+                "align": "start",
+                "children": [
+                  {
+                    "type": "icon",
+                    "name": "arrow_right",
+                    "size": "small",
+                    "color": "black",
+                    "when": "item.done != 'true'"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "check",
+                    "size": "small",
+                    "color": "muted",
+                    "when": "item.done == 'true'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.text}}",
+                    "size": "medium",
+                    "weight": "bold",
+                    "color": "black",
+                    "flex": 1,
+                    "max_lines": 1,
+                    "when": "item.done != 'true'"
+                  },
+                  {
+                    "type": "text",
+                    "value": "{{item.text}}",
+                    "size": "medium",
+                    "color": "muted",
+                    "flex": 1,
+                    "max_lines": 1,
+                    "when": "item.done == 'true'"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "value": "得頭7件會顯示，共 {{data.item_count}} 件",
+            "size": "small",
+            "color": "info",
+            "when": { "all": ["params.lang != 'en'", "data.item_count > '7'"] }
+          },
+          {
+            "type": "text",
+            "value": "Showing the first 7 of {{data.item_count}}",
+            "size": "small",
+            "color": "info",
+            "when": { "all": ["params.lang != 'zh'", "data.item_count > '7'"] }
+          }
+        ]
+      }
+    ]
+  },
+  "schedule": {
+    "default": { "every_min": 30 }
+  }
+}
