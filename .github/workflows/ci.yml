@@ -39,6 +39,16 @@ jobs:
             echo "no community packs yet — nothing to validate"
           fi
 
+      # Parked work (draft/README.md) is never published, but it is still held
+      # to the schema so it does not rot while it waits.
+      - name: Validate draft packs against core's schema
+        run: |
+          if compgen -G "draft/*.yat-pack.json" > /dev/null; then
+            npx --yes ajv-cli@5 validate --spec=draft2020 -s core/schema/yat-pack.schema.json -d "draft/*.yat-pack.json"
+          else
+            echo "no draft packs — nothing to validate"
+          fi
+
   render-tests:
     runs-on: ubuntu-latest
     steps:

@@ -908,7 +908,7 @@ fi
 # ---- dropped rather than shipped with a count that quietly lies once
 # ---- something gets checked off. Per-row open/done styling (icon + weight +
 # ---- muted colour, §9.1a) IS exactly item-scoped, so that part is exact.
-TODO=official/todo.yat-pack.json
+TODO=draft/todo.yat-pack.json   # parked, see draft/README.md — tested here so it does not rot
 
 # a) default install: items defaults to [], so this is the zero-items tutorial
 #    state that teaches the voice grammar — the whole reason the empty state
